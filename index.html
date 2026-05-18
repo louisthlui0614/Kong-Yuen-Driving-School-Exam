@@ -96,8 +96,8 @@
             width: 75px;
             vertical-align: middle;
             text-align: center;
-            padding-right: 2px;  /* Decreased padding to shift the logo more right */
-            padding-left: 12px;  /* Pushes it slightly inward from the far left margin */
+            padding-right: 2px;
+            padding-left: 12px;
         }
         .right-content-cell {
             display: table-cell;
@@ -110,6 +110,7 @@
             width: auto;
             display: inline-block;
             vertical-align: middle;
+            margin-left: -150px;
         }
 
         /* Main Content 3-Column Layout */
@@ -257,7 +258,7 @@
 <body>
 
     <div class="print-btn-container">
-        <button class="print-btn" onclick="window.print()">儲存為 PDF / 進入列印模式 (Save to PDF / Print)</button>
+        <button class="print-btn" onclick="prepareAndPrint()">儲存為 PDF / 進入列印模式 (Save to PDF / Print)</button>
     </div>
 
     <div class="header">
@@ -268,15 +269,15 @@
     <div class="meta-table">
         <div class="meta-row">
             <div class="meta-cell">
-                <div class="meta-title"><input type="text" value="Name" style="font-weight:bold; font-size:10pt; width:120px;"></div>
+                <div class="meta-title"><input type="text" id="student-name" value="Name" style="font-weight:bold; font-size:10pt; width:120px;"></div>
                 <div style="margin-top: 4px;">傳動系統： <label>自動波</label></div>
-                <div style="margin-top: 4px;">身份證號碼：<input type="text" style="width:140px;"></div>
+                <div style="margin-top: 4px;">身份證號碼：<input type="text" id="hkid-num" style="width:140px;"></div>
             </div>
             <div class="meta-cell right">
                 <div class="right-box-container">
                     <div class="right-box-row">
                         <div class="left-logo-cell">
-                            <img src="https://cdn.discordapp.com/attachments/1499448680401338428/1505262024681324584/IMG_1780.png?ex=6a09fc01&is=6a08aa81&hm=8a668af2053b6ceaf5e4cc97b1ef9a0996bfdbfe20b67173b27e9ba3ed30c953&" alt="Logo" class="centre-logo">
+                            <img src="https://cdn.discordapp.com/attachments/1499448680401338428/1505737096000962640/302d1eb0f176c742.png?ex=6a0bb672&is=6a0a64f2&hm=65ed2f4388298973630ac6ed85e4542da8206cd0979e5d2e7537e83930cf22c0&" alt="Logo" class="centre-logo">
                         </div>
                         <div class="right-content-cell">
                             <div><input type="text" value="港緣駕駛學院" style="font-weight:bold; font-size:11pt; text-align:right; width:120px;"></div>
@@ -314,7 +315,7 @@
                 <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">9. 車輛停定前未有回軚</div></div>
                 <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">10. 車輛停定時仍然扭軚</div></div>
                 <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">11. 碰及物體</div></div>
-                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">12. (       ) 手軚</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">12. (___) 手軚</div></div>
             </div>
 
             <div class="section-block">
@@ -395,7 +396,7 @@
                 <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">51. 手掣使用不當</div></div>
                 <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">52. 腳掣使用不當</div></div>
                 <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">53. 油門使用不當</div></div>
-                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="input-text">54. 離合器使用不當</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">54. 離合器使用不當</div></div>
                 <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">55. 軚盤使用不當</div></div>
             </div>
 
@@ -460,10 +461,11 @@
 
     <div class="legal-note">
         此考試成績須經港緣駕駛學院最後覆核為實<br>
-        This test result is subject to final verification by Transport Department.
+        This test result is subject to final verification by Kong Yuen Driving School.
     </div>
 
     <script>
+        // Automatic setup for current system date and times
         window.addEventListener('DOMContentLoaded', (event) => {
             const now = new Date();
             
@@ -483,6 +485,31 @@
             document.getElementById('meta-time-top').value = formattedTime;
             document.getElementById('footer-time').value = formattedTime;
         });
+
+        // Function that dynamically handles custom output names during PDF generation
+        function prepareAndPrint() {
+            // Keep track of the original tab title
+            const originalTitle = document.title;
+            
+            // Retrieve data cleanly from our targeted input items
+            const rawName = document.getElementById('student-name').value.trim();
+            const rawHkid = document.getElementById('hkid-num').value.trim();
+            
+            // Set safety defaults if fields happen to be empty when clicking print
+            const cleanName = (rawName === "" || rawName === "Name") ? "未命名學員" : rawName;
+            const cleanHkid = (rawHkid === "") ? "無身份證資料" : rawHkid;
+            
+            // Dynamic combination string formatting: Name_HKID
+            document.title = `${cleanName}_${cleanHkid}`;
+            
+            // Trigger the browser system print execution environment
+            window.print();
+            
+            // Revert back safely immediately behind the scenes after execution context releases
+            setTimeout(() => {
+                document.title = originalTitle;
+            }, 100);
+        }
     </script>
 </body>
 </html>
