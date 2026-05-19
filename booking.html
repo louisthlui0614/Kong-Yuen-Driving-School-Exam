@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <title>網上預約 - 港緣駕駛學院</title>
+    <!-- 引入 Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 這裡請保留並沿用 index.html 的 header/footer CSS */
+        body { font-family: 'Noto Sans HK', sans-serif; background: #f4f7f6; margin: 0; }
+        .form-container { max-width: 600px; margin: 50px auto; padding: 30px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 15px; background: #ff6600; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- 這裡放你的 header (同 index.html) -->
+    
+    <div class="form-container">
+        <h2>立即預約考試</h2>
+        <form id="bookingForm">
+            <input type="text" id="name" placeholder="中文姓名" required>
+            <input type="text" id="idCard" placeholder="身份證編號" required>
+            <input type="tel" id="phone" placeholder="電話號碼" required>
+            
+            <select id="licenseType" required></select>
+            <input type="date" id="examDate" required>
+            <select id="examSlot" required></select>
+            
+            <button type="submit">提交報名</button>
+        </form>
+    </div>
+
+    <script>
+        const supabase = supabase.createClient('https://egevptrvdatxpwxpwxhi.supabase.co', 'egevptrvdatxpwxpwxhi');
+
+        // 載入下拉選單選項
+        async function loadOptions() {
+            const { data: types } = await supabase.from('license_types').select('name');
+            const { data: slots } = await supabase.from('time_slots').select('time_range');
+            
+            types.forEach(t => document.getElementById('licenseType').innerHTML += `<option>${t.name}</option>`);
+            slots.forEach(s => document.getElementById('examSlot').innerHTML += `<option>${s.time_range}</option>`);
+        }
+        loadOptions();
+
+        // 提交表單
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const bookingData = {
+                name: document.getElementById('name').value,
+                id_card: document.getElementById('idCard').value,
+                phone: document.getElementById('phone').value,
+                license_type: document.getElementById('licenseType').value,
+                exam_date: document.getElementById('examDate').value,
+                exam_slot: document.getElementById('examSlot').value
+            };
+
+            // 1. 上傳到 Supabase
+            await supabase.from('bookings').insert([bookingData]);
+
+            // 2. 發送到 Discord (使用 Webhook)
+            fetch('https://discordapp.com/api/webhooks/1506251281226793022/MUSLfFN8GP5oLdz8s1MSshQ7gCF61yw6nBQHRQKIh8ZOiUYH9zMS-e6CNwpHv8IL4gzG', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: `收到新預約: ${bookingData.name} - ${bookingData.license_type}` })
+            });
+
+            alert('預約成功！');
+        });
+    </script>
+</body>
+</html>
