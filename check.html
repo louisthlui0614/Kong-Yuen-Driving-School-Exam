@@ -6,7 +6,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
-    // 修正：變數名稱改為 supabaseClient，避免與函式庫本身衝突
     const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -55,7 +54,6 @@
     <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
 
     <script>
-        // 修正：所有使用 supabase 的地方都改為 supabaseClient
         async function loginPolice() {
             const user = document.getElementById('p_user').value;
             const pass = document.getElementById('p_pass').value;
@@ -71,7 +69,7 @@
             const { data, error } = await supabaseClient.from('driver_records').select('*').or(`name.ilike.%${q}%,hkid.ilike.%${q}%`);
             
             const res = document.getElementById('result');
-            if (error) { console.error(error); return; }
+            if (error) { console.error("搜尋錯誤:", error); alert("搜尋錯誤: " + error.message); return; }
             
             res.innerHTML = data && data.length ? '' : '找不到記錄';
             data?.forEach(d => {
@@ -87,9 +85,19 @@
 
         async function updateStatus(id) {
             const status = document.getElementById('s_'+id).value;
-            const { error } = await supabaseClient.from('driver_records').update({ status }).eq('id', id);
-            if (error) alert("更新失敗: " + error.message);
-            else alert("狀態已更新");
+            // 關鍵修改：檢查 error 回傳
+            const { error } = await supabaseClient
+                .from('driver_records')
+                .update({ status: status })
+                .eq('id', id);
+
+            if (error) {
+                console.error("更新失敗:", error);
+                alert("更新失敗: " + error.message + "\n請確認 RLS 政策是否允許更新。");
+            } else {
+                alert("狀態已成功更新至資料庫！");
+                searchDriver(); // 重新搜尋以刷新畫面
+            }
         }
     </script>
 </body>
