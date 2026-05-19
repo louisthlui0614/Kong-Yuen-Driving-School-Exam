@@ -94,16 +94,9 @@
                         <th>操作</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>張小明</td>
-                        <td>Z987654(3)</td>
-                        <td>61234567</td>
-                        <td>輕型貨車 (自動波)</td>
-                        <td>週末及公眾假期</td>
-                        <td>
-                            <button class="btn btn-primary" onclick="promoteToStudent('張小明', 'Z987654(3)', '61234567', '輕型貨車')">一鍵註冊為學員</button>
-                        </td>
+                <tbody id="appointmentTableBody">
+                    <tr id="emptyAppointmentRow">
+                        <td colspan="6" style="text-align: center; color: #888; padding: 30px;">暫無未處理的新網上預約申請。</td>
                     </tr>
                 </tbody>
             </table>
@@ -117,7 +110,7 @@
                         <th>學員姓名</th>
                         <th>身份證號碼</th>
                         <th>電話號碼</th>
-                        <th>已擁有/准許駕駛類別</th>
+                        <th>可駕駛車輛類別</th>
                         <th>駕駛執照狀態 (警察查核)</th>
                         <th>考試表格 (PDF)</th>
                         <th>操作</th>
@@ -128,7 +121,7 @@
                         <td>陳大文</td>
                         <td>A123456(7)</td>
                         <td>91234567</td>
-                        <td>輕型貨車、私家車</td>
+                        <td>輕型貨車（包含私家車牌照）</td>
                         <td><span class="status-badge status-active" id="status-1">有效 (VALID)</span></td>
                         <td><a href="#" target="_blank" id="pdf-1">📄 檢視表格.pdf</a></td>
                         <td>
@@ -169,8 +162,12 @@
     </div>
 
     <script>
-        // 模擬功能：一鍵將預約轉為學員
-        function promoteToStudent(name, hkid, phone, license) {
+        // 模擬功能：一鍵將預約轉為學員（帶入正確的「可駕駛車輛類別」）
+        function promoteToStudent(name, hkid, phone, currentLicense) {
+            // 隱藏暫無資料的提示列
+            const emptyRow = document.getElementById('emptyAppointmentRow');
+            if(emptyRow) emptyRow.style.display = 'none';
+
             const tbody = document.getElementById('studentTableBody');
             const newRowId = Date.now();
             const newRow = document.createElement('tr');
@@ -178,7 +175,7 @@
                 <td>${name}</td>
                 <td>${hkid}</td>
                 <td>${phone}</td>
-                <td>${license}</td>
+                <td>${currentLicense}</td>
                 <td><span class="status-badge status-active" id="status-${newRowId}">有效 (VALID)</span></td>
                 <td><span style="color:#999;" id="pdf-${newRowId}">未上載</span></td>
                 <td>
@@ -188,7 +185,7 @@
                 </td>
             `;
             tbody.appendChild(newRow);
-            alert(`成功！已將 ${name} 註冊為正式學員，資料已同步至執照數據庫。`);
+            alert(`成功！已將 ${name} 註冊為正式學員，狀態預設為【有效】。`);
         }
 
         // 模擬功能：切換執照有效性（控制警察查核網頁的結果）
@@ -198,12 +195,12 @@
                 badge.classList.remove('status-active');
                 badge.classList.add('status-inactive');
                 badge.innerText = '已停用/失效 (INVALID)';
-                alert("該學員的駕駛執照狀態已設為【失效】，警察查核時將顯示無效。");
+                alert("該人士的駕駛執照狀態已設為【失效】，警察查核時將顯示無效。");
             } else {
                 badge.classList.remove('status-inactive');
                 badge.classList.add('status-active');
                 badge.innerText = '有效 (VALID)';
-                alert("該學員的駕駛執照狀態已設為【有效】。");
+                alert("該人士的駕駛執照狀態已設為【有效】。");
             }
         }
 
@@ -223,7 +220,7 @@
             }
         }
 
-        // 後台動態設定新增項目（考試項目 / 時段）
+        // 後台動態設定新增項目
         function addSetting(containerId, inputId) {
             const input = document.getElementById(inputId);
             const value = input.value.trim();
@@ -236,7 +233,7 @@
             
             container.appendChild(newBadge);
             input.value = '';
-            alert(`已成功新增項目！(未來串接資料庫後，主頁 ${containerId === 'examList' ? '預約項目' : '時段選單'} 將會自動同步變更)`);
+            alert(`已成功新增項目！(未來串接資料庫後，主頁選單將會自動同步變更)`);
         }
     </script>
 </body>
