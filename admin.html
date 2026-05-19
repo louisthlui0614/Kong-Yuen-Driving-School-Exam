@@ -3,199 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>職員後台 - 港緣駕駛學院</title>
+    <title>港緣駕駛學院 - 職員管理後台</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: "Microsoft JhengHei", sans-serif; color: #1a1a1a; background-color: #f4f6f9; margin: 0; }
-        .navbar { background-color: #333; color: white; padding: 15px 5%; display: flex; justify-content: space-between; }
-        .navbar a { color: #e6c229; text-decoration: none; font-weight: bold; }
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        body {
+            font-family: "Microsoft JhengHei", "Apple LiGothic Medium", sans-serif;
+            color: #1a1a1a;
+            background-color: #fdfaf2;
+            margin: 0; padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header {
+            background-color: #fffdec;
+            border: 2px solid #e6c229;
+            padding: 20px; border-radius: 8px;
+            margin-bottom: 30px; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        h1, h2 { margin: 0; color: #1a1a1a; }
+        h2 { margin-bottom: 15px; font-size: 16pt; border-left: 5px solid #e6c229; padding-left: 10px; }
         
-        .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-top: 4px solid #e6c229; }
-        .card h2 { margin-top: 0; color: #333; font-size: 16pt; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .section-box {
+            background-color: #fff; border: 1px solid #ebdca5;
+            padding: 25px; border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02); margin-bottom: 30px;
+        }
+
+        /* 時間段設定樣式 */
+        .slot-manager { display: flex; gap: 10px; margin-bottom: 15px; }
+        .slot-manager input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 250px; }
+        .btn {
+            background-color: #e6c229; color: #000; border: none;
+            padding: 8px 15px; font-weight: bold; border-radius: 4px; cursor: pointer;
+        }
+        .btn:hover { background-color: #d4b220; }
+        .btn-danger { background-color: #ff4d4d; color: white; }
+        .btn-danger:hover { background-color: #e60000; }
+        .btn-secondary { background-color: #666; color: white; }
+        .btn-secondary:hover { background-color: #444; }
         
-        /* 表格樣式 */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .tag-container { display: flex; gap: 10px; flex-wrap: wrap; }
+        .slot-tag {
+            background-color: #fffdec; border: 1px solid #e6c229;
+            padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 8px;
+        }
+        .slot-tag span { cursor: pointer; color: #ff4d4d; font-weight: bold; }
+
+        /* Table 樣式 */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th, td { border: 1px solid #ebdca5; padding: 12px; text-align: left; font-size: 10.5pt; }
         th { background-color: #fffdec; font-weight: bold; }
-        tr:nth-child(even) { background-color: #fafafa; }
+        tr:nth-child(even) { background-color: #faf8f0; }
+
+        /* 編輯中表單控制 */
+        .edit-input { width: 100%; padding: 5px; border: 1px solid #e6c229; border-radius: 4px; }
+        .edit-select { width: 100%; padding: 5px; border: 1px solid #e6c229; border-radius: 4px; }
         
-        /* 可編輯儲存格的樣式 */
-        .editable { background-color: #eef8ff; border: 1px dashed #2196F3; cursor: text; transition: 0.2s; }
-        .editable:focus { outline: none; background-color: #fff; border: 1px solid #2196F3; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
-        
-        .btn { padding: 8px 15px; background-color: #333; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn:hover { background-color: #555; }
-        .btn-save { background-color: #4CAF50; }
-        
-        .config-area { display: flex; gap: 20px; }
-        .config-box { flex: 1; }
-        textarea { width: 100%; height: 100px; padding: 10px; font-family: inherit; }
+        .no-data { text-align: center; color: #999; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-logo">🛠️ 港緣學院 - 職員管理後台</div>
-        <a href="index.html">返回前台預約頁</a>
-    </nav>
-
-    <div class="container">
-        <div class="card">
-            <h2>👥 學員資訊 (點擊藍底儲存格即可手動編輯)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>身份證號碼</th>
-                        <th>中文姓名</th>
-                        <th>牌照類別</th>
-                        <th>執照狀態 (有效/無效)</th>
-                    </tr>
-                </thead>
-                <tbody id="studentsTableBody">
-                    </tbody>
-            </table>
-            <br>
-            <button class="btn btn-save" onclick="saveStudents()">💾 儲存學員變更</button>
-            <span id="saveStatus" style="color: green; margin-left: 10px; display: none;">儲存成功！</span>
+<div class="container">
+    <header>
+        <div>
+            <h1>港緣駕駛學院 后台管理系統</h1>
+            <small>學術與學院管理專用系統</small>
         </div>
+        <a href="index.html" class="btn btn-secondary" style="text-decoration: none;">返回預約首頁</a>
+    </header>
 
-        <div class="card">
-            <h2>📅 預約考試記錄</h2>
+    <section class="section-box">
+        <h2>2. 考試時段設定 (供預約頁面動態選擇)</h2>
+        <div class="slot-manager">
+            <input type="text" id="newTimeSlot" placeholder="例如：09:00 - 11:00">
+            <button class="btn" onclick="addTimeSlot()">新增時段</button>
+        </div>
+        <div class="tag-container" id="slotsContainer">
+            </div>
+    </section>
+
+    <section class="section-box">
+        <h2>4. 預約資訊紀錄 (全部預約紀錄)</h2>
+        <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
-                        <th>提交時間</th>
-                        <th>身份證</th>
-                        <th>姓名</th>
-                        <th>考試項目</th>
+                        <th>預約時間</th>
+                        <th>學生姓名</th>
+                        <th>身份證號碼</th>
+                        <th>電話號碼</th>
+                        <th>預約考試項目</th>
+                        <th>傳動系統</th>
                         <th>考試日期</th>
-                        <th>考試時段</th>
+                        <th>考試時間段</th>
                     </tr>
                 </thead>
                 <tbody id="bookingsTableBody">
                     </tbody>
             </table>
         </div>
+    </section>
 
-        <div class="card">
-            <h2>⚙️ 前台選項設定 (設定預約頁面的選項)</h2>
-            <div class="config-area">
-                <div class="config-box">
-                    <label>可預約之考試項目 (每行一個)</label>
-                    <textarea id="configExams"></textarea>
-                </div>
-                <div class="config-box">
-                    <label>可預約之考試時段 (每行一個)</label>
-                    <textarea id="configTimes"></textarea>
-                </div>
-            </div>
-            <br>
-            <button class="btn" onclick="saveConfig()">更新前台選項</button>
-        </div>
-    </div>
-
-    <script>
-        window.onload = function() {
-            loadConfig();
-            loadBookings();
-            loadStudents();
-        };
-
-        // --- 處理設定 (考試與時段) ---
-        function loadConfig() {
-            const defaultExams = ['輕型貨車合併試', '私家車合併試', '的士筆試'];
-            const defaultTimes = ['09:00 - 10:00', '11:00 - 12:00', '14:30 - 15:30'];
-            
-            const exams = JSON.parse(localStorage.getItem('adminExams')) || defaultExams;
-            const times = JSON.parse(localStorage.getItem('adminTimes')) || defaultTimes;
-
-            document.getElementById('configExams').value = exams.join('\n');
-            document.getElementById('configTimes').value = times.join('\n');
-        }
-
-        function saveConfig() {
-            const exams = document.getElementById('configExams').value.split('\n').filter(e => e.trim() !== '');
-            const times = document.getElementById('configTimes').value.split('\n').filter(e => e.trim() !== '');
-            
-            localStorage.setItem('adminExams', JSON.stringify(exams));
-            localStorage.setItem('adminTimes', JSON.stringify(times));
-            alert('前台選項已更新！請刷新前台預約網頁查看。');
-        }
-
-        // --- 處理預約記錄 ---
-        function loadBookings() {
-            const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
-            const tbody = document.getElementById('bookingsTableBody');
-            tbody.innerHTML = '';
-            
-            if (bookings.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暫無預約記錄</td></tr>';
-                return;
-            }
-
-            bookings.reverse().forEach(b => {
-                tbody.innerHTML += `
+    <section class="section-box">
+        <h2>4. 學員資訊管理 (可手動編輯)</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
                     <tr>
-                        <td>${b.submitTime}</td>
-                        <td>${b.hkid}</td>
-                        <td>${b.name}</td>
-                        <td>${b.examType}</td>
-                        <td>${b.examDate}</td>
-                        <td>${b.examTime}</td>
+                        <th>身份證號碼</th>
+                        <th>中文姓名</th>
+                        <th>牌照類別</th>
+                        <th>執照狀態</th>
+                        <th>操作</th>
                     </tr>
-                `;
-            });
+                </thead>
+                <tbody id="studentsTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<script>
+    // 初始化資料
+    const defaultSlots = ["09:00 - 12:00", "13:00 - 16:00", "18:00 - 21:00"];
+    let timeSlots = JSON.parse(localStorage.getItem('admin_time_slots')) || defaultSlots;
+    let bookings = JSON.parse(localStorage.getItem('admin_bookings')) || [];
+    let students = JSON.parse(localStorage.getItem('admin_students')) || [];
+    
+    // 紀錄當前正在編輯哪一行的學員（使用身份證號作 Key）
+    let editingStudentId = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        renderTimeSlots();
+        renderBookings();
+        renderStudents();
+    });
+
+    /* ================= 2. 時間段管理邏輯 ================= */
+    function renderTimeSlots() {
+        const container = document.getElementById('slotsContainer');
+        container.innerHTML = '';
+        timeSlots.forEach((slot, index) => {
+            const tag = document.createElement('div');
+            tag.className = 'slot-tag';
+            tag.innerHTML = `${slot} <span onclick="deleteTimeSlot(${index})">&times;</span>`;
+            container.appendChild(tag);
+        });
+        localStorage.setItem('admin_time_slots', JSON.stringify(timeSlots));
+    }
+
+    function addTimeSlot() {
+        const input = document.getElementById('newTimeSlot');
+        const val = input.value.trim();
+        if(val) {
+            timeSlots.push(val);
+            input.value = '';
+            renderTimeSlots();
+        }
+    }
+
+    function deleteTimeSlot(index) {
+        if(confirm("確定刪除此時間段嗎？這將影響新預約的選項。")) {
+            timeSlots.splice(index, 1);
+            renderTimeSlots();
+        }
+    }
+
+    /* ================= 4. 預約資訊渲染 ================= */
+    function renderBookings() {
+        const tbody = document.getElementById('bookingsTableBody');
+        tbody.innerHTML = '';
+        if(bookings.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="no-data">暫無任何預約紀錄</td></tr>';
+            return;
+        }
+        // 由新到舊排序
+        bookings.slice().reverse().forEach(b => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${b.timestamp || 'N/A'}</td>
+                <td><strong>${b.name}</strong></td>
+                <td><code>${b.id_card}</code></td>
+                <td>${b.phone}</td>
+                <td>${b.exam_type}</td>
+                <td>${b.gear}</td>
+                <td>${b.date}</td>
+                <td><span class="slot-tag" style="display:inline-block; border-radius:4px; font-size:9pt;">${b.time}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    /* ================= 4. 學員資訊管理與編輯邏輯 ================= */
+    function renderStudents() {
+        const tbody = document.getElementById('studentsTableBody');
+        tbody.innerHTML = '';
+        if(students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">暫無學員基本資料</td></tr>';
+            return;
         }
 
-        // --- 處理學員資訊 (可編輯表格) ---
-        function loadStudents() {
-            const students = JSON.parse(localStorage.getItem('students')) || {};
-            const tbody = document.getElementById('studentsTableBody');
-            tbody.innerHTML = '';
-
-            const keys = Object.keys(students);
-            if (keys.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">暫無學員資料</td></tr>';
-                return;
+        students.forEach((s, index) => {
+            const tr = document.createElement('tr');
+            
+            if (editingStudentId === s.id_card) {
+                // 編輯模式：切換成 Input 輸入框與 Select 選單
+                tr.innerHTML = `
+                    <td><code>${s.id_card}</code> (不可修改)</td>
+                    <td><input type="text" id="edit_name" class="edit-input" value="${s.name}"></td>
+                    <td>
+                        <select id="edit_license" class="edit-select">
+                            <option value="輕型貨車" ${s.license_type === '輕型貨車' ? 'selected' : ''}>輕型貨車</option>
+                            <option value="私家車" ${s.license_type === '私家車' ? 'selected' : ''}>私家車</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select id="edit_status" class="edit-select">
+                            <option value="有效" ${s.status === '有效' ? 'selected' : ''}>有效</option>
+                            <option value="無效" ${s.status === '無效' ? 'selected' : ''}>無效</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn" onclick="saveStudent(${index})" style="padding:4px 10px; font-size:9pt; background-color:#28a745; color:white;">儲存</button>
+                        <button class="btn btn-secondary" onclick="cancelEdit()" style="padding:4px 10px; font-size:9pt;">取消</button>
+                    </td>
+                `;
+            } else {
+                // 唯讀檢視模式
+                const statusColor = s.status === '有效' ? 'green' : 'red';
+                tr.innerHTML = `
+                    <td><code>${s.id_card}</code></td>
+                    <td>${s.name}</td>
+                    <td>${s.license_type}</td>
+                    <td style="color: ${statusColor}; font-weight: bold;">${s.status}</td>
+                    <td>
+                        <button class="btn" onclick="startEdit('${s.id_card}')" style="padding:4px 10px; font-size:9pt;">手動編輯</button>
+                    </td>
+                `;
             }
+            tbody.appendChild(tr);
+        });
+    }
 
-            // 生成表格，加入 contenteditable 讓 td 變成可以打字的輸入框
-            keys.forEach(hkid => {
-                const s = students[hkid];
-                tbody.innerHTML += `
-                    <tr data-hkid="${hkid}">
-                        <td>${s.hkid}</td> <td class="editable" contenteditable="true" data-field="name">${s.name}</td>
-                        <td class="editable" contenteditable="true" data-field="licenseClass">${s.licenseClass}</td>
-                        <td class="editable" contenteditable="true" data-field="status">${s.status}</td>
-                    </tr>
-                `;
-            });
+    function startEdit(id_card) {
+        editingStudentId = id_card;
+        renderStudents();
+    }
+
+    function cancelEdit() {
+        editingStudentId = null;
+        renderStudents();
+    }
+
+    function saveStudent(index) {
+        const newName = document.getElementById('edit_name').value.trim();
+        const newLicense = document.getElementById('edit_license').value;
+        const newStatus = document.getElementById('edit_status').value;
+
+        if(!newName) {
+            alert("姓名不能為空！");
+            return;
         }
 
-        function saveStudents() {
-            const students = JSON.parse(localStorage.getItem('students')) || {};
-            const rows = document.querySelectorAll('#studentsTableBody tr[data-hkid]');
-            
-            rows.forEach(row => {
-                const hkid = row.getAttribute('data-hkid');
-                const newName = row.querySelector('[data-field="name"]').innerText.trim();
-                const newLicense = row.querySelector('[data-field="licenseClass"]').innerText.trim();
-                const newStatus = row.querySelector('[data-field="status"]').innerText.trim();
-                
-                if(students[hkid]) {
-                    students[hkid].name = newName;
-                    students[hkid].licenseClass = newLicense;
-                    students[hkid].status = newStatus;
-                }
-            });
+        // 更新陣列資料
+        students[index].name = newName;
+        students[index].license_type = newLicense;
+        students[index].status = newStatus;
 
-            localStorage.setItem('students', JSON.stringify(students));
-            
-            const msg = document.getElementById('saveStatus');
-            msg.style.display = 'inline';
-            setTimeout(() => msg.style.display = 'none', 2000);
-        }
-    </script>
+        // 寫入在地資料庫
+        localStorage.setItem('admin_students', JSON.stringify(students));
+        
+        // 離開編輯模式並重新渲染
+        editingStudentId = null;
+        renderStudents();
+    }
+</script>
 </body>
 </html>
