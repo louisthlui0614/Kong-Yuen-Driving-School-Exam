@@ -4,137 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>港緣駕駛學院</title>
-    <!-- 引入 Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: "Microsoft JhengHei", "Apple LiGothic Medium", sans-serif; color: #1a1a1a; background-color: #fdfaf2; margin: 0; padding: 0; line-height: 1.6; }
+        body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; }
         
-        /* 導航欄與其他原有樣式保持不變 */
-        .navbar { background-color: #fffdec; border-bottom: 3px solid #e6c229; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 16pt; font-weight: bold; }
-        .nav-logo img { height: 45px; width: auto; }
-        .nav-links { display: flex; gap: 20px; list-style: none; margin: 0; padding: 0; }
-        .nav-links a { text-decoration: none; color: #333; font-weight: bold; font-size: 11pt; transition: color 0.2s; }
-        .nav-links a:hover { color: #e6c229; }
-        .btn-admin { background-color: #333; color: #ebdca5 !important; padding: 6px 12px; border-radius: 4px; }
-
-        .hero { background: linear-gradient(135deg, #ebdca5 0%, #fdfaf2 100%); padding: 80px 5%; text-align: center; border-bottom: 1px solid #ebdca5; }
-        .hero h1 { font-size: 28pt; margin: 0 0 15px 0; }
-        .btn-scroll { background-color: #e6c229; color: #000; padding: 12px 30px; font-weight: bold; text-decoration: none; border-radius: 5px; }
-
-        .features { padding: 5px 5% 40px 5%; max-width: 1200px; margin: 0 auto; }
-        .section-title { text-align: center; font-size: 20pt; margin: 40px 0; position: relative; }
-        .section-title::after { content: ''; display: block; width: 50px; height: 3px; background-color: #e6c229; margin: 8px auto 0 auto; }
-        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
-        .feature-card { background-color: #fff; border: 1px solid #ebdca5; padding: 25px; border-radius: 6px; text-align: center; }
-
-        /* 預約表格區塊 - 已優化 */
-        .booking-section { background-color: #fffdec; border-top: 1px solid #ebdca5; border-bottom: 1px solid #ebdca5; padding: 5px 5% 50px 5%; }
-        .form-container { max-width: 600px; margin: 0 auto; background-color: #fff; border: 2px solid #e6c229; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 10pt; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 10pt; }
-        .btn-submit { width: 100%; background-color: #e6c229; color: #000; border: none; padding: 12px; font-size: 12pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        /* 頂部區域 */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 50px; background: #f8f8f8; }
+        .logo-container { display: flex; align-items: center; gap: 15px; font-weight: bold; font-size: 1.5rem; }
+        .logo-container img { height: 50px; }
+        .topbar a { margin-left: 20px; text-decoration: none; color: #333; font-weight: bold; }
+        
+        /* 簡介區域 */
+        .intro { padding: 50px; text-align: center; }
+        .intro img { max-width: 600px; width: 100%; border-radius: 10px; margin: 20px 0; }
+        
+        /* 按鈕 */
+        .btn-reserve { display: inline-block; padding: 15px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-logo">
-            <img src="logo.png" alt="Logo">
-            港緣駕駛學院
+    <header>
+        <div class="logo-container">
+            <img src="logo.png" alt="港緣駕駛學院 Logo">
+            <span>港緣駕駛學院</span>
         </div>
-        <ul class="nav-links">
-            <li><a href="#">首頁</a></li>
-            <li><a href="#booking">網上預約</a></li>
-            <li><a href="admin.html" class="btn-admin">職員後台</a></li>
-        </ul>
-    </nav>
-
-    <header class="hero">
-        <h1>路政圓緣，穩健啟航</h1>
-        <p>提供專業輕型貨車及私家車駕駛培訓，高合格率，口碑載道。</p>
-        <a href="#booking" class="btn-scroll">立即預約考試</a>
+        <nav class="topbar">
+            <a href="#">首頁</a>
+            <a href="#">網上預約</a>
+            <a href="#">駕駛執照查核</a>
+        </nav>
     </header>
 
-    <section class="booking-section" id="booking">
-        <h2 class="section-title">考試預約系統</h2>
-        <div class="form-container">
-            <form id="appointmentForm">
-                <div class="form-group">
-                    <label for="name">中文姓名 *</label>
-                    <input type="text" id="name" required placeholder="例如：陳大文">
-                </div>
-                <div class="form-group">
-                    <label for="id_card">身份證號碼 * (例如: A1234567)</label>
-                    <input type="text" id="id_card" required placeholder="請輸入完整身份證編號">
-                </div>
-                <div class="form-group">
-                    <label for="phone">電話號碼 *</label>
-                    <input type="tel" id="phone" required placeholder="例如：91234567" pattern="[0-9]{8}">
-                </div>
-                <div class="form-group">
-                    <label>傳動系統 *</label>
-                    <input type="text" value="自動波" disabled style="background-color: #f9f9f9;">
-                </div>
-                <div class="form-group">
-                    <label for="exam_type">預約考試項目 *</label>
-                    <select id="exam_type" required><option>載入中...</option></select>
-                </div>
-                <div class="form-group">
-                    <label for="exam_date">選擇考試日期 *</label>
-                    <input type="date" id="exam_date" required>
-                </div>
-                <div class="form-group">
-                    <label for="time_slot">選擇考試時段 *</label>
-                    <select id="time_slot" required><option>載入中...</option></select>
-                </div>
-                <button type="submit" class="btn-submit" id="submitBtn">提交預約申請</button>
-            </form>
-        </div>
+    <section class="intro">
+        <h1>學院簡介</h1>
+        <p>港緣駕駛學院致力於提供專業、安全的駕駛培訓服務。我們擁有資深的教練團隊及現代化的教學設施，助您順利考取駕駛執照。</p>
+        
+        <!-- 這是之後要替換的相片 -->
+        <img src="https://via.placeholder.com/600x300?text=學院環境照片" alt="學院簡介圖片">
+        
+        <br>
+        <a href="#" class="btn-reserve">立即預約考試</a>
     </section>
 
-    <script>
-        // 配置 Supabase (請填入您在 Supabase Dashboard 獲得的 API 金鑰)
-        const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
-
-        async function init() {
-            // 從資料庫載入考試項目與時段
-            const { data: exams } = await supabase.from('exam_options').select('label');
-            const { data: slots } = await supabase.from('time_slots').select('label');
-            
-            document.getElementById('exam_type').innerHTML = exams.map(e => `<option value="${e.label}">${e.label}</option>`).join('');
-            document.getElementById('time_slot').innerHTML = slots.map(s => `<option value="${s.label}">${s.label}</option>`).join('');
-        }
-
-        document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-
-            const bookingData = {
-                student_name: document.getElementById('name').value,
-                id_card: document.getElementById('id_card').value.toUpperCase(),
-                phone: document.getElementById('phone').value,
-                exam_type: document.getElementById('exam_type').value,
-                exam_date: document.getElementById('exam_date').value,
-                time_slot: document.getElementById('time_slot').value
-            };
-
-            // 存入資料庫
-            const { error } = await supabase.from('bookings').insert([bookingData]);
-            
-            if (error) {
-                alert('提交失敗，請檢查資料：' + error.message);
-            } else {
-                alert('預約成功！我們將會盡快聯絡你。');
-                document.getElementById('appointmentForm').reset();
-            }
-            btn.disabled = false;
-        });
-
-        init();
-    </script>
 </body>
 </html>
