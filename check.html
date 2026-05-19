@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>港緣駕駛學院 - 執法部門學員查核專頁</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f4f6f9; margin: 0; padding: 20px; color: #333;
+        }
+        .check-container {
+            max-width: 650px; margin: 60px auto; background: #fff;
+            border: 2px solid #34495e; border-radius: 8px; padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .police-header {
+            text-align: center; border-bottom: 3px solid #34495e;
+            padding-bottom: 15px; margin-bottom: 25px;
+        }
+        .police-header h1 { font-size: 18pt; color: #2c3e50; margin: 5px 0; }
+        .police-header p { font-size: 10pt; color: #7f8c8d; margin: 0; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 11pt; }
+        .form-group input {
+            width: 100%; padding: 12px; border: 1px solid #bdc3c7; border-radius: 4px;
+            font-size: 11pt; font-family: monospace;
+        }
+        .form-group input:focus { outline: none; border-color: #34495e; background-color: #faffff; }
+        
+        .btn-search {
+            width: 100%; background-color: #2c3e50; color: #fff; border: none;
+            padding: 14px; font-size: 12pt; font-weight: bold; border-radius: 4px;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-search:hover { background-color: #1a252f; }
+        
+        /* 結果顯示區塊 */
+        .result-box {
+            display: none; margin-top: 25px; padding: 20px; border-radius: 6px;
+            border: 1px solid #ccc; text-align: center;
+        }
+        .status-active { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .status-notfound { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        
+        .status-title { font-size: 16pt; font-weight: bold; margin-bottom: 10px; }
+        .result-details { text-align: left; background: rgba(255,255,255,0.7); padding: 15px; border-radius: 4px; font-size: 11pt; line-height: 1.8; }
+        
+        .back-link { text-decoration: none; color: #7f8c8d; font-size: 10pt; display: inline-block; margin-top: 20px; }
+        .back-link:hover { color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="check-container">
+    <div class="police-header">
+        <div style="font-size: 30pt;">🚓</div>
+        <h1>港緣駕駛學院 - 執法部門查核專頁</h1>
+        <p>此系統僅供執法人員、運輸署及相關授權部門作資格核對用途</p>
+    </div>
+
+    <form id="checkForm" onsubmit="performInspection(event)">
+        <div class="form-group">
+            <label for="searchName">學員中文姓名 *</label>
+            <input type="text" id="searchName" required placeholder="例如：陳大文">
+        </div>
+        <div class="form-group">
+            <label for="searchHkid">香港身份證號碼 *</label>
+            <input type="text" id="searchHkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$" title="請輸入正確的香港身份證格式">
+        </div>
+        <button type="submit" class="btn-search">🔍 提交身份與學籍核對</button>
+    </form>
+
+    <div id="successBox" class="result-box status-active">
+        <div class="status-title">🟢 查核通過：有效正式學員</div>
+        <div class="result-details">
+            <strong>學員編號（HKID）：</strong> <span id="resId"></span><br>
+            <strong>中文姓名：</strong> <span id="resName"></span><br>
+            <strong>報考項目：</strong> <span id="resExam"></span> (<span id="resGear"></span>)<br>
+            <strong>學籍狀態：</strong> 正式有效 (Active)<br>
+            <strong>官方考試表：</strong> <span id="resPdf"></span>
+        </div>
+    </div>
+
+    <div id="failBox" class="result-box status-notfound">
+        <div class="status-title">🔴 查核失敗：查無此學員紀錄</div>
+        <p>系統未有登錄符合該姓名與身份證號碼之有效學籍。請核對輸入資料是否正確，或聯絡校務處查詢。</p>
+    </div>
+
+    <center><a href="index.html" class="back-link">⬅️ 返回學院主頁</a></center>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://falyohlekezdbxjnhwcn.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB';
+    const DISCORD_WEBHOOK_URL = 'https://discordapp.com/api/webhooks/1506184682893738076/FyeR1FBXdwJnol8EEnkg7OSFzrrg2YKvZkbPNHesgp3B0DoAOmg9IN7juSNyt6CMRAUW';
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function performInspection(event) {
+        event.preventDefault();
+        
+        // 隱藏先前的搜尋結果
+        document.getElementById('successBox').style.display = 'none';
+        document.getElementById('failBox').style.display = 'none';
+
+        const name = document.getElementById('searchName').value.trim();
+        const hkid = document.getElementById('searchHkid').value.toUpperCase().trim();
+
+        try {
+            // 1. 去 Supabase 進行精確配對查詢 (必須同時吻合姓名、香港身份證，且狀態必須是 active)
+            const { data, error } = await supabaseClient
+                .from('students')
+                .select('*')
+                .eq('name_zh', name)
+                .eq('hkid', hkid)
+                .eq('status', 'active'); // 只有被職員審批過轉為 active 的人才查得到
+
+            if (error) throw error;
+
+            let isFound = false;
+
+            // 2. 渲染前端畫面
+            if (data && data.length > 0) {
+                isFound = true;
+                const student = data[0];
+                document.getElementById('resId').innerText = student.hkid;
+                document.getElementById('resName').innerText = student.name_zh;
+                document.getElementById('resExam').innerText = student.exam_type;
+                document.getElementById('resGear').innerText = student.gear_type;
+                
+                if (student.pdf_url) {
+                    document.getElementById('resPdf').innerHTML = `<a href="${student.pdf_url}" target="_blank" style="color:#2980b9; font-weight:bold;">點擊開啟已簽署 TD82 電子表</a>`;
+                } else {
+                    document.getElementById('resPdf').innerText = '尚未上載官方考試表格';
+                }
+                
+                document.getElementById('successBox').style.display = 'block';
+            } else {
+                document.getElementById('failBox').style.display = 'block';
+            }
+
+            // 3. 安全審計：發送即時日誌通知到 Discord Webhook
+            const auditMessage = {
+                username: "🚨 港緣系統安全審計",
+                avatar_url: "https://images-ext-1.discordapp.net/external/vR9cRnt3F7yH6K3FWhn8wYgC7z_kQeN8Wpmsr0K3I-Q/%3Fsize%3D1024/https/cdn.discordapp.com/icons/1211111111111111111/a_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png",
+                embeds: [{
+                    title: isFound ? "ℹ️ 執法查核：【成功查獲學籍】" : "⚠️ 執法查核警報：【查無此人】",
+                    color: isFound ? 3066993 : 15158332, // 成功綠色，失敗紅色
+                    description: `系統於剛才錄得一次執法查核請求。`,
+                    fields: [
+                        { name: "🔎 查詢姓名", value: name, inline: true },
+                        { name: "🪪 查詢身份證", value: `\`${hkid}\``, inline: true },
+                        { name: "📊 系統結果", value: isFound ? "✅ 正式學員 (Active)" : "❌ 查無此有效學籍紀錄", inline: false }
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(auditMessage)
+            });
+
+        } catch (err) {
+            console.error('Audit/Search Error:', err);
+            alert('查核系統連線異常，請稍後再試。');
+        }
+    }
+</script>
+</body>
+</html>
