@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院 - 職員後台管理系統</title>
+    <title>港緣駕駛學院 - 職員後台管理系統 (Supabase 版)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
             font-family: "Microsoft JhengHei", sans-serif;
             margin: 0; padding: 0; background-color: #f8f9fa; display: flex; color: #333;
         }
-        
-        /* 側邊欄 Sidebar */
         .sidebar {
             width: 240px; height: 100vh; background-color: #212529; color: #fff;
             position: fixed; top: 0; left: 0; padding: 20px 0;
@@ -22,45 +21,25 @@
         }
         .sidebar-brand img { height: 35px; width: auto; }
         .sidebar-menu { list-style: none; padding: 20px 0; margin: 0; }
-        .sidebar-menu li a {
-            display: block; padding: 12px 20px; color: #ddd; text-decoration: none; font-size: 11pt;
-        }
-        .sidebar-menu li a:hover, .sidebar-menu li a.active {
-            background-color: #343a40; color: #e6c229; border-left: 4px solid #e6c229;
-        }
-
-        /* 主內容區 Main Content */
+        .sidebar-menu li a { display: block; padding: 12px 20px; color: #ddd; text-decoration: none; font-size: 11pt; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background-color: #343a40; color: #e6c229; border-left: 4px solid #e6c229; }
         .main-content { margin-left: 240px; width: calc(100% - 240px); padding: 40px; }
         .header-title { font-size: 20pt; margin-top: 0; margin-bottom: 5px; }
         .header-subtitle { color: #666; font-size: 10pt; margin-bottom: 30px; }
-        
-        /* 卡片區域 */
         .card { background: #fff; border: 1px solid #dee2e6; border-radius: 6px; padding: 25px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .card-title { font-size: 14pt; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #e6c229; padding-bottom: 8px; }
-
-        /* 表格樣式 */
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; background: #fff; font-size: 10pt; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6; }
         th { background-color: #f1f3f5; font-weight: bold; }
-        
-        /* 按鈕與標籤 */
-        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 9pt; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 9pt; margin-right: 5px; }
         .btn-primary { background-color: #e6c229; color: #000; }
-        .btn-primary:hover { background-color: #d4b220; }
         .btn-success { background-color: #28a745; color: #fff; }
         .btn-danger { background-color: #dc3545; color: #fff; }
-        
         .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 8pt; font-weight: bold; }
         .status-active { background-color: #d4edda; color: #155724; }
         .status-inactive { background-color: #f8d7da; color: #721c24; }
-
-        /* 表單排版 */
-        .inline-form { display: flex; gap: 10px; margin-bottom: 20px; }
-        .inline-form input, .inline-form select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 10pt; }
-        
-        .badge-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-        .setting-badge { background: #e9ecef; padding: 6px 12px; border-radius: 20px; font-size: 9pt; display: flex; align-items: center; gap: 8px; }
-        .remove-badge { color: #dc3545; cursor: pointer; font-weight: bold; }
+        /* 准許駕駛類別的可編輯輸入框 */
+        .class-input { width: 140px; padding: 4px 8px; font-size: 9pt; border: 1px solid #ccc; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -72,17 +51,16 @@
         </div>
         <ul class="sidebar-menu">
             <li><a href="#" class="active">👥 學員與預約管理</a></li>
-            <li><a href="#settings">⚙️ 系統動態設定</a></li>
             <li><a href="index.html">🌐 返回學院首頁</a></li>
         </ul>
     </div>
 
     <div class="main-content">
-        <h1 class="header-title">校務管理面板</h1>
-        <div class="header-subtitle">歡迎登入。在此管理新預約、學籍、上載考試表格以及設定執照有效性。</div>
+        <h1 class="header-title">校務管理面板 (LIVE)</h1>
+        <div class="header-subtitle">系統正連線至 Supabase 資料庫，所有數據均為即時同步。</div>
 
         <div class="card">
-            <div class="card-title">📥 待處理網上預約（最新收到）</div>
+            <div class="card-title">📥 待處理網上預約（來自 appointments 表）</div>
             <table>
                 <thead>
                     <tr>
@@ -95,15 +73,13 @@
                     </tr>
                 </thead>
                 <tbody id="appointmentTableBody">
-                    <tr id="emptyAppointmentRow">
-                        <td colspan="6" style="text-align: center; color: #888; padding: 30px;">暫無未處理的新網上預約申請。</td>
-                    </tr>
+                    <tr><td colspan="6" style="text-align: center; color: #888;">載入中...</td></tr>
                 </tbody>
             </table>
         </div>
 
         <div class="card">
-            <div class="card-title">🎓 正式學員名冊 & 執照有效性控制（執法部門查核數據源）</div>
+            <div class="card-title">🎓 正式學員名冊 & 執照有效性控制（來自 students 表）</div>
             <table>
                 <thead>
                     <tr>
@@ -112,128 +88,160 @@
                         <th>電話號碼</th>
                         <th>可駕駛車輛類別</th>
                         <th>駕駛執照狀態 (警察查核)</th>
-                        <th>考試表格 (PDF)</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody id="studentTableBody">
-                    <tr>
-                        <td>陳大文</td>
-                        <td>A123456(7)</td>
-                        <td>91234567</td>
-                        <td>輕型貨車（包含私家車牌照）</td>
-                        <td><span class="status-badge status-active" id="status-1">有效 (VALID)</span></td>
-                        <td><a href="#" target="_blank" id="pdf-1">📄 檢視表格.pdf</a></td>
-                        <td>
-                            <button class="btn btn-danger" onclick="toggleLicense(1)">切換有效性</button>
-                            <button class="btn btn-primary" onclick="triggerUpload(1)">更新PDF</button>
-                            <input type="file" id="file-1" style="display:none;" accept=".pdf" onchange="handleFile(1)">
-                        </td>
-                    </tr>
+                    <tr><td colspan="6" style="text-align: center; color: #888;">載入中...</td></tr>
                 </tbody>
             </table>
-        </div>
-
-        <div class="card" id="settings">
-            <div class="card-title">⚙️ 系統動態設定（變更將同步至主頁選單）</div>
-            
-            <h3>1. 管理「預約考試項目」</h3>
-            <div class="inline-form">
-                <input type="text" id="newExamItem" placeholder="例如：電單車（包含機車牌照）" style="width: 300px;">
-                <button class="btn btn-success" onclick="addSetting('examList', 'newExamItem')">+ 新增項目</button>
-            </div>
-            <div class="badge-list" id="examList">
-                <div class="setting-badge">輕型貨車（包含私家車牌照） <span class="remove-badge" onclick="this.parentElement.remove()">&times;</span></div>
-            </div>
-
-            <br><hr style="border-color: #eee;"><br>
-
-            <h3>2. 管理「首選上課時段」</h3>
-            <div class="inline-form">
-                <input type="text" id="newTimeItem" placeholder="例如：平日清晨 (07:00 - 09:00)" style="width: 300px;">
-                <button class="btn btn-success" onclick="addSetting('timeList', 'newTimeItem')">+ 新增時段</button>
-            </div>
-            <div class="badge-list" id="timeList">
-                <div class="setting-badge">平日日間 (09:00 - 18:00) <span class="remove-badge" onclick="this.parentElement.remove()">&times;</span></div>
-                <div class="setting-badge">平日夜間 (18:00 - 22:00) <span class="remove-badge" onclick="this.parentElement.remove()">&times;</span></div>
-                <div class="setting-badge">週末及公眾假期 <span class="remove-badge" onclick="this.parentElement.remove()">&times;</span></div>
-            </div>
         </div>
     </div>
 
     <script>
-        // 模擬功能：一鍵將預約轉為學員（帶入正確的「可駕駛車輛類別」）
-        function promoteToStudent(name, hkid, phone, currentLicense) {
-            // 隱藏暫無資料的提示列
-            const emptyRow = document.getElementById('emptyAppointmentRow');
-            if(emptyRow) emptyRow.style.display = 'none';
+        // 1. 初始化 Supabase 
+        // ⚠️ 請替換為你真實的 Supabase URL 和 Anon Key
+        const SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT_ID.supabase.co";
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY";
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            const tbody = document.getElementById('studentTableBody');
-            const newRowId = Date.now();
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td>${name}</td>
-                <td>${hkid}</td>
-                <td>${phone}</td>
-                <td>${currentLicense}</td>
-                <td><span class="status-badge status-active" id="status-${newRowId}">有效 (VALID)</span></td>
-                <td><span style="color:#999;" id="pdf-${newRowId}">未上載</span></td>
-                <td>
-                    <button class="btn btn-danger" onclick="toggleLicense('${newRowId}')">切換有效性</button>
-                    <button class="btn btn-primary" onclick="triggerUpload('${newRowId}')">上載PDF</button>
-                    <input type="file" id="file-${newRowId}" style="display:none;" accept=".pdf" onchange="handleFile('${newRowId}')">
-                </td>
-            `;
-            tbody.appendChild(newRow);
-            alert(`成功！已將 ${name} 註冊為正式學員，狀態預設為【有效】。`);
-        }
+        // 網頁載入時立刻執行 Fetch
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchAppointments();
+            fetchStudents();
+        });
 
-        // 模擬功能：切換執照有效性（控制警察查核網頁的結果）
-        function toggleLicense(id) {
-            const badge = document.getElementById(`status-${id}`);
-            if (badge.classList.contains('status-active')) {
-                badge.classList.remove('status-active');
-                badge.classList.add('status-inactive');
-                badge.innerText = '已停用/失效 (INVALID)';
-                alert("該人士的駕駛執照狀態已設為【失效】，警察查核時將顯示無效。");
-            } else {
-                badge.classList.remove('status-inactive');
-                badge.classList.add('status-active');
-                badge.innerText = '有效 (VALID)';
-                alert("該人士的駕駛執照狀態已設為【有效】。");
-            }
-        }
-
-        // 模擬功能：觸發隱藏的檔案上載
-        function triggerUpload(id) {
-            document.getElementById(`file-${id}`).click();
-        }
-
-        // 模擬功能：處理 PDF 檔案上載提示
-        function handleFile(id) {
-            const fileInput = document.getElementById(`file-${id}`);
-            if (fileInput.files.length > 0) {
-                const fileName = fileInput.files[0].name;
-                const pdfContainer = document.getElementById(`pdf-${id}`);
-                pdfContainer.innerHTML = `<a href="#" target="_blank">📄 ${fileName}</a>`;
-                alert(`駕駛考試表格 PDF（${fileName}）上載成功！已關聯至該學員檔案。`);
-            }
-        }
-
-        // 後台動態設定新增項目
-        function addSetting(containerId, inputId) {
-            const input = document.getElementById(inputId);
-            const value = input.value.trim();
-            if (!value) return;
-
-            const container = document.getElementById(containerId);
-            const newBadge = document.createElement('div');
-            newBadge.className = 'setting-badge';
-            newBadge.innerHTML = `${value} <span class="remove-badge" onclick="this.parentElement.remove()">&times;</span>`;
+        // 2. 從 Supabase 抓取預約名單
+        async function fetchAppointments() {
+            const tbody = document.getElementById('appointmentTableBody');
             
-            container.appendChild(newBadge);
-            input.value = '';
-            alert(`已成功新增項目！(未來串接資料庫後，主頁選單將會自動同步變更)`);
+            let { data: appointments, error } = await supabase
+                .from('appointments')
+                .select('*');
+
+            if (error) {
+                console.error(error);
+                tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">讀取失敗：${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!appointments || appointments.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">暫無未處理的新網上預約。</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            appointments.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.name}</td>
+                    <td>${row.hkid}</td>
+                    <td>${row.phone}</td>
+                    <td>${row.exam_type}</td>
+                    <td>${row.preferred_time || '未填寫'}</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="promoteToStudent('${row.id}', '${row.name}', '${row.hkid}', '${row.phone}')">一鍵註冊為學員</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 3. 從 Supabase 抓取正式學員名冊
+        async function fetchStudents() {
+            const tbody = document.getElementById('studentTableBody');
+            
+            let { data: students, error } = await supabase
+                .from('students')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">讀取失敗：${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!students || students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">資料庫內暫無正式學員。</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            students.forEach(row => {
+                const tr = document.createElement('tr');
+                const badgeClass = row.is_valid ? 'status-active' : 'status-inactive';
+                const badgeText = row.is_valid ? '有效 (VALID)' : '已停用/失效 (INVALID)';
+                
+                tr.innerHTML = `
+                    <td>${row.name}</td>
+                    <td>${row.hkid}</td>
+                    <td>${row.phone}</td>
+                    <td>
+                        <input type="text" class="class-input" id="class-input-${row.id}" value="${row.vehicle_classes || ''}">
+                    </td>
+                    <td><span class="status-badge ${badgeClass}">${badgeText}</span></td>
+                    <td>
+                        <button class="btn btn-danger" onclick="toggleLicense('${row.id}', ${row.is_valid})">切換有效性</button>
+                        <button class="btn btn-success" onclick="updateVehicleClass('${row.id}')">更新類別</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 4. 一鍵將預約轉為學員 (Supabase 寫入與刪除)
+        async function promoteToStudent(appointmentId, name, hkid, phone) {
+            // 預設新學員的可駕駛類別為空白，且執照預設為有效 (true)
+            const { error: insertError } = await supabase
+                .from('students')
+                .insert([{ name: name, hkid: hkid, phone: phone, vehicle_classes: '未設定', is_valid: true }]);
+
+            if (insertError) {
+                alert(`註冊學員失敗：${insertError.message}`);
+                return;
+            }
+
+            // 註冊成功後，將原先 appointments 表入面個一筆資料 Delete 走
+            const { error: deleteError } = await supabase
+                .from('appointments')
+                .delete()
+                .eq('id', appointmentId);
+
+            alert(`成功！已將 ${name} 升格為正式學員，並從預約清單移除。`);
+            fetchAppointments();
+            fetchStudents();
+        }
+
+        // 5. 即時切換更新 Supabase 執照有效性 (is_valid Boolean 欄位)
+        async function toggleLicense(studentId, currentStatus) {
+            const { error } = await supabase
+                .from('students')
+                .update({ is_valid: !currentStatus })
+                .eq('id', studentId);
+
+            if (error) {
+                alert(`切換失敗：${error.message}`);
+            } else {
+                fetchStudents(); // 重新整理列表
+            }
+        }
+
+        // 6. 即時更新「可駕駛車輛類別」文字到 Supabase
+        async function updateVehicleClass(studentId) {
+            const inputValue = document.getElementById(`class-input-${studentId}`).value;
+            
+            const { error } = await supabase
+                .from('students')
+                .update({ vehicle_classes: inputValue })
+                .eq('id', studentId);
+
+            if (error) {
+                alert(`更新失敗：${error.message}`);
+            } else {
+                alert('可駕駛車輛類別已成功保存至 Supabase！');
+                fetchStudents();
+            }
         }
     </script>
 </body>
