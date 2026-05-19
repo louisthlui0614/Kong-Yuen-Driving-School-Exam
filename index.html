@@ -1,50 +1,58 @@
-<!DOCTYPE html>
-<html lang="zh-HK">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院</title>
-    <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; }
-        
-        /* 頂部區域 */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 50px; background: #f8f8f8; }
-        .logo-container { display: flex; align-items: center; gap: 15px; font-weight: bold; font-size: 1.5rem; }
-        .logo-container img { height: 50px; }
-        .topbar a { margin-left: 20px; text-decoration: none; color: #333; font-weight: bold; }
-        
-        /* 簡介區域 */
-        .intro { padding: 50px; text-align: center; }
-        .intro img { max-width: 600px; width: 100%; border-radius: 10px; margin: 20px 0; }
-        
-        /* 按鈕 */
-        .btn-reserve { display: inline-block; padding: 15px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
-    </style>
-</head>
-<body>
+<style>
+    /* 引入 Google Fonts 讓字體更美觀 */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700&display=swap');
 
-    <header>
-        <div class="logo-container">
-            <img src="logo.png" alt="港緣駕駛學院 Logo">
-            <span>港緣駕駛學院</span>
-        </div>
-        <nav class="topbar">
-            <a href="#">首頁</a>
-            <a href="#">網上預約</a>
-            <a href="#">駕駛執照查核</a>
-        </nav>
-    </header>
-
-    <section class="intro">
-        <h1>學院簡介</h1>
-        <p>港緣駕駛學院致力於提供專業、安全的駕駛培訓服務。我們擁有資深的教練團隊及現代化的教學設施，助您順利考取駕駛執照。</p>
-        
-        <!-- 這是之後要替換的相片 -->
-        <img src="https://via.placeholder.com/600x300?text=學院環境照片" alt="學院簡介圖片">
-        
-        <br>
-        <a href="#" class="btn-reserve">立即預約考試</a>
-    </section>
-
-</body>
-</html>
+    body { 
+        font-family: 'Noto Sans HK', sans-serif; 
+        margin: 0; 
+        padding: 0; 
+        background-color: #f4f7f6; /* 極淡的灰色背景，比純白更有質感 */
+        color: #333;
+    }
+    
+    /* 頂部區域 - 使用深藍色調，增加專業感 */
+    header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 20px 80px; 
+        background: #ffffff; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* 加入淡淡陰影 */
+    }
+    
+    .logo-container { display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 1.5rem; color: #003366; }
+    .logo-container img { height: 50px; }
+    
+    .topbar a { 
+        margin-left: 30px; 
+        text-decoration: none; 
+        color: #555; 
+        font-weight: 600; 
+        transition: color 0.3s; /* 按鈕顏色過渡效果 */
+    }
+    
+    .topbar a:hover { color: #ff6600; } /* 滑鼠移上去變成橙色 */
+    
+    /* 簡介區域 */
+    .intro { padding: 80px 20px; text-align: center; background: white; }
+    .intro h1 { color: #003366; font-size: 2.5rem; margin-bottom: 20px; }
+    .intro img { max-width: 700px; width: 100%; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); margin: 30px 0; }
+    
+    /* 按鈕 - 使用吸睛的橙色，配合圓角 */
+    .btn-reserve { 
+        display: inline-block; 
+        padding: 18px 40px; 
+        background: #ff6600; 
+        color: white; 
+        text-decoration: none; 
+        border-radius: 50px; /* 超圓角設計更現代 */
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: transform 0.2s, background 0.3s;
+    }
+    
+    .btn-reserve:hover { 
+        background: #e65c00; 
+        transform: scale(1.05); /* 滑鼠移上去微微放大 */
+    }
+</style>
