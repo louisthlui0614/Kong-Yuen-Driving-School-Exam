@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院1</title>
+    <title>港緣駕駛學院</title>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -297,6 +297,33 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
+        // 在初始化客戶端 const supabaseClient = ... 之後加入這段自動同步程式碼：
+async function initFormOptions() {
+    // 1. 動態讀取考試項目並生成 Radio Buttons
+    const { data: exams } = await supabaseClient.from('settings_exams').select('*');
+    const examContainer = document.getElementById('dynamic_exams');
+    if (exams && exams.length > 0) {
+        examContainer.innerHTML = '';
+        exams.forEach((item, index) => {
+            examContainer.innerHTML += `
+                <label><input type="radio" name="exam_type" value="${item.name}" ${index === 0 ? 'checked' : ''}> ${item.name}</label>
+            `;
+        });
+    }
+
+    // 2. 動態讀取時段並生成 Dropdown Options
+    const { data: times } = await supabaseClient.from('settings_times').select('*');
+    const timeSelect = document.getElementById('preferred_time');
+    if (times && times.length > 0) {
+        timeSelect.innerHTML = '';
+        times.forEach(item => {
+            timeSelect.innerHTML += `<option value="${item.slot_text}">${item.slot_text}</option>`;
+        });
+    }
+}
+
+// 執行載入選單
+initFormOptions();
         // 1. 設定你的 Supabase 和 Discord 配置
         const SUPABASE_URL = 'https://falyohlekezdbxjnhwcn.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB';
