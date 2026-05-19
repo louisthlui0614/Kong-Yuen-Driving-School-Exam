@@ -7,17 +7,16 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     
     <script>
-        // 【重要】請務必將這兩行替換成你後台的真實 URL 和 Key
         const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
-
-        // 初始化
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     </script>
 
     <style>
-        body { font-family: 'Noto Sans HK', sans-serif; background: #f4f7f6; margin: 0; }
-        header { padding: 20px 80px; background: #eef6ff; display: flex; justify-content: space-between; align-items: center; }
+        body { font-family: 'Noto Sans HK', sans-serif; margin: 0; background-color: #f4f7f6; }
+        header { padding: 20px 80px; background: #eef6ff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .logo-link { text-decoration: none; color: #003366; display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 1.5rem; }
+        .topbar a { margin-left: 30px; text-decoration: none; color: #555; font-weight: 600; }
         .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: white; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
@@ -27,28 +26,24 @@
         .login-box { text-align: center; padding: 100px; }
         input { padding: 10px; margin: 10px; width: 200px; }
         button { padding: 10px 20px; background: #ff6600; color: white; border: none; cursor: pointer; }
+        footer { padding: 40px; background: #003366; color: white; text-align: center; }
     </style>
 </head>
-    <header>
-    <!-- Logo 區域 -->
-    <a href="index.html" class="logo-link">
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo">
-            <span>港緣駕駛學院</span>
-        </div>
-    </a>
-    
-    <!-- Topbar 導航連結 -->
-    <nav class="topbar">
-        <a href="index.html">首頁</a>
-        <a href="booking.html">網上預約</a>
-        <a href="admin.html">管理後台</a> <!-- 你可以在這裡加上連結 -->
-    </nav>
-</header>
 <body>
 
-    <header><div class="logo-container"><strong>港緣駕駛學院後台</strong></div></header>
+    <!-- 正確的 Header -->
+    <header>
+        <a href="index.html" class="logo-link">
+            <span>港緣駕駛學院後台</span>
+        </a>
+        <nav class="topbar">
+            <a href="index.html">首頁</a>
+            <a href="booking.html">網上預約</a>
+            <a href="admin.html">管理後台</a>
+        </nav>
+    </header>
 
+    <!-- 登入區域 -->
     <div id="login-screen" class="login-box">
         <h2>管理員登入</h2>
         <input type="text" id="username" placeholder="用戶名">
@@ -57,6 +52,7 @@
         <button onclick="login()">登入</button>
     </div>
 
+    <!-- 管理員內容 -->
     <div id="admin-content" class="container">
         <h2>駕駛人士記錄</h2>
         <table id="driverTable">
@@ -67,6 +63,10 @@
         </table>
         <div id='calendar'></div>
     </div>
+
+    <footer>
+        <p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p>
+    </footer>
 
     <script>
         async function login() {
@@ -85,20 +85,18 @@
                 document.getElementById('admin-content').style.display = 'block';
                 loadData();
             } else {
-                alert("帳號或密碼錯誤！" + (error ? "\n" + error.message : ""));
+                alert("帳號或密碼錯誤！");
             }
         }
 
         async function loadData() {
-            // 載入駕駛記錄
             const { data: drivers } = await supabaseClient.from('driver_records').select('*');
             const tbody = document.querySelector('#driverTable tbody');
-            tbody.innerHTML = ''; // 清空舊內容
+            tbody.innerHTML = '';
             drivers?.forEach(d => {
                 tbody.innerHTML += `<tr><td>${d.name}</td><td>${d.hkid}</td><td>${d.phone}</td><td>${d.license_type}</td><td>${d.status}</td><td><a href="${d.pdf_url}" target="_blank">檢視</a></td></tr>`;
             });
 
-            // 載入預約記錄
             const { data: bookings } = await supabaseClient.from('bookings').select('*');
             const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth',
@@ -108,7 +106,4 @@
         }
     </script>
 </body>
-    <footer>
-    <p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p>
-</footer>
 </html>
