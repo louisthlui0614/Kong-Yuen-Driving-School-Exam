@@ -178,8 +178,11 @@
 
             const fullExamString = `${exam_type} (${gear_type})`;
 
+            let supabaseSuccess = false;
+            let supabaseErrorMsg = "";
+
+            // 動作 A：寫入 Supabase 資料庫嘅 appointments 表（用 try-catch 包裹，確保不影響 Discord）
             try {
-                // 動作 A：寫入 Supabase 資料庫嘅 appointments 表
                 const { data, error } = await supabase
                     .from('appointments')
                     .insert([
@@ -192,13 +195,24 @@
                         }
                     ]);
 
-                if (error) throw error;
+                if (error) {
+                    console.error("Supabase 詳細錯誤資訊：", error);
+                    supabaseErrorMsg = `${error.code} - ${error.message} (${error.details || '無詳細資料'})`;
+                } else {
+                    supabaseSuccess = true;
+                }
+            } catch (dbErr) {
+                console.error("資料庫連線崩潰：", dbErr);
+                supabaseErrorMsg = dbErr.message;
+            }
 
-                // 動作 B：同步發送通知去 Discord Webhook
+            // 動作 B：同步發送通知去 Discord Webhook（不論資料庫成功與否都強制發送，用作雙重保障）
+            try {
+                const statusTitle = supabaseSuccess ? "🔔 收到全新網上預約考試申請！" : "⚠️ [警告] 收到網上預約，但寫入資料庫失敗！";
                 const discordMessage = {
                     embeds: [{
-                        title: "🔔 收到全新網上預約考試申請！",
-                        color: 15122985, // 港緣金黃色色碼
+                        title: statusTitle,
+                        color: supabaseSuccess ? 15122985 : 16711680, // 成功為金黃色，失敗為紅色
                         fields: [
                             { name: "👤 申請人姓名", value: name, inline: true },
                             { name: "📞 電話號碼", value: phone, inline: true },
@@ -206,30 +220,42 @@
                             { name: "🚗 報考項目", value: fullExamString, inline: true },
                             { name: "⏰ 首選時段", value: preferred_time, inline: true }
                         ],
-                        footer: { text: "港緣校務自動化系統 • 2026" },
+                        footer: { text: `港緣校務自動化系統 • DB狀態: ${supabaseSuccess ? '成功' : '失敗'}` },
                         timestamp: new Date().toISOString()
                     }]
                 };
 
-                // 用 fetch 射去 Discord
+                // 如果資料庫失敗，在 Discord 加上錯誤訊息方便排查
+                if (!supabaseSuccess) {
+                    discordMessage.embeds[0].fields.push({
+                        name: "❌ 資料庫錯誤回報",
+                        value: `\`\`\`${supabaseErrorMsg}\`\`\``,
+                        inline: false
+                    });
+                }
+
                 await fetch(DISCORD_WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(discordMessage)
                 });
 
-                // 成功回饋
-                alert(`感謝你，${name}！\n預約申請已成功提交，資料已寫入系統，Discord 職員頻道亦已即時收到通知。`);
-                document.getElementById('appointmentForm').reset();
-
-            } catch (err) {
-                console.error(err);
-                alert(`提交失敗，請檢查網絡或憑證設定：\n${err.message}`);
-            } finally {
-                // 恢復按鈕
-                submitBtn.disabled = false;
-                submitBtn.innerText = "提交預約申請";
+            } catch (discordErr) {
+                console.error("Discord Webhook 發送失敗：", discordErr);
             }
+
+            // 3. 根據最終結果給予使用者回饋
+            if (supabaseSuccess) {
+                alert(`感謝你，${name}！\n預約申請已成功提交，資料已寫入系統，職員頻道亦已收到通知。`);
+                document.getElementById('appointmentForm').reset();
+            } else {
+                // 如果寫入失敗，直接把背後原因彈出來！
+                alert(`⚠️ 系統提示：資料已嘗試送出，但資料庫同步失敗。\n\n錯誤原因：${supabaseErrorMsg}\n\n* 職員渠道會嘗試處理您的申請。`);
+            }
+
+            // 恢復按鈕
+            submitBtn.disabled = false;
+            submitBtn.innerText = "提交預約申請";
         }
     </script>
 </body>
