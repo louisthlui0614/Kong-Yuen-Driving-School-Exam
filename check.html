@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <title>執法部門搜尋 - 港緣駕駛學院</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script>
-    const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
+    // 修正：變數名稱改為 supabaseClient，避免與函式庫本身衝突
+    const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     </script>
+
     <style>
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; background-color: #f4f7f6; }
         header { padding: 20px 80px; background: #eef6ff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -24,6 +29,11 @@
 
     <header>
         <a href="index.html" class="logo-link">港緣駕駛學院</a>
+        <nav class="topbar">
+            <a href="index.html">首頁</a>
+            <a href="booking.html">網上預約</a>
+            <a href="admin.html">管理後台</a>
+        </nav>
     </header>
 
     <div id="auth-screen" class="container">
@@ -45,23 +55,26 @@
     <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
 
     <script>
+        // 修正：所有使用 supabase 的地方都改為 supabaseClient
         async function loginPolice() {
             const user = document.getElementById('p_user').value;
             const pass = document.getElementById('p_pass').value;
-            const { data } = await supabase.from('police_accounts').select('*').eq('username', user).eq('password', pass).single();
+            const { data, error } = await supabaseClient.from('police_accounts').select('*').eq('username', user).eq('password', pass).single();
             if (data) {
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('search-screen').style.display = 'block';
-            } else { alert("認證失敗"); }
+            } else { alert("認證失敗或帳號錯誤"); }
         }
 
         async function searchDriver() {
             const q = document.getElementById('query').value;
-            const { data } = await supabase.from('driver_records').select('*').or(`name.ilike.%${q}%,hkid.ilike.%${q}%`);
+            const { data, error } = await supabaseClient.from('driver_records').select('*').or(`name.ilike.%${q}%,hkid.ilike.%${q}%`);
             
             const res = document.getElementById('result');
-            res.innerHTML = data.length ? '' : '找不到記錄';
-            data.forEach(d => {
+            if (error) { console.error(error); return; }
+            
+            res.innerHTML = data && data.length ? '' : '找不到記錄';
+            data?.forEach(d => {
                 res.innerHTML += `
                     <div style="border:1px solid #ddd; padding:15px; margin-top:10px;">
                         <p>姓名: ${d.name} | 身份證: ${d.hkid}</p>
@@ -74,8 +87,9 @@
 
         async function updateStatus(id) {
             const status = document.getElementById('s_'+id).value;
-            await supabase.from('driver_records').update({ status }).eq('id', id);
-            alert("狀態已更新");
+            const { error } = await supabaseClient.from('driver_records').update({ status }).eq('id', id);
+            if (error) alert("更新失敗: " + error.message);
+            else alert("狀態已更新");
         }
     </script>
 </body>
