@@ -7,10 +7,16 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     
     <script>
-        const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    </script>
+    const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
+
+    // 關鍵修正：明確傳入 apikey 參數，並使用 apiKey 選項
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+            persistSession: false // 因為我們用手動查詢，不需要自動儲存 session
+        }
+    });
+</script>
 
     <style>
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; background-color: #f4f7f6; }
