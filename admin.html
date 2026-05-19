@@ -7,18 +7,15 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     
     <script>
-    const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: { persistSession: false }
-    });
+        const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo'; // 請務必使用你的 anon key
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     </script>
 
     <style>
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; background-color: #f4f7f6; }
         header { padding: 20px 80px; background: #eef6ff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .logo-link { text-decoration: none; color: #003366; display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 1.5rem; }
-        .topbar a { margin-left: 30px; text-decoration: none; color: #555; font-weight: 600; }
+        .logo-link { text-decoration: none; color: #003366; font-weight: 700; font-size: 1.5rem; }
         .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: white; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
@@ -27,19 +24,13 @@
         #admin-content { display: none; }
         .login-box { text-align: center; padding: 100px; }
         input { padding: 8px; margin: 5px; }
-        button { padding: 8px 15px; background: #ff6600; color: white; border: none; cursor: pointer; }
-        footer { padding: 40px; background: #003366; color: white; text-align: center; }
+        button { padding: 8px 15px; background: #ff6600; color: white; border: none; cursor: pointer; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <header>
-        <a href="index.html" class="logo-link"><span>港緣駕駛學院後台</span></a>
-        <nav class="topbar">
-            <a href="index.html">首頁</a>
-            <a href="booking.html">網上預約</a>
-            <a href="admin.html">管理後台</a>
-        </nav>
+        <a href="index.html" class="logo-link">港緣駕駛學院後台</a>
     </header>
 
     <div id="login-screen" class="login-box">
@@ -60,12 +51,11 @@
         <div id='calendar'></div>
     </div>
 
-    <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
-
     <script>
         async function login() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
+            // 建議後續改用 Supabase Auth，這裡暫時使用查詢檢查
             const { data, error } = await supabaseClient.from('admin_users').select('*').eq('username', user).eq('password', pass).single();
             if (data) {
                 document.getElementById('login-screen').style.display = 'none';
@@ -75,6 +65,7 @@
         }
 
         async function loadData() {
+            // 載入駕駛記錄
             const { data: drivers } = await supabaseClient.from('driver_records').select('*');
             const tbody = document.querySelector('#driverTable tbody');
             tbody.innerHTML = '';
@@ -89,27 +80,32 @@
                 </tr>`;
             });
 
+            // 載入預約記錄 (修正欄位名稱: exam_date, exam_slot)
             const { data: bookings } = await supabaseClient.from('bookings').select('*');
-            const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
-                events: bookings?.map(b => ({ title: b.name, start: b.date }))
+                events: bookings?.map(b => ({
+                    title: `${b.name} (${b.exam_slot})`,
+                    start: b.exam_date 
+                }))
             });
             calendar.render();
         }
 
         async function updateRecord(id) {
-            const name = document.getElementById('name_'+id).value;
-            const hkid = document.getElementById('hkid_'+id).value;
-            const phone = document.getElementById('phone_'+id).value;
-            const license = document.getElementById('lic_'+id).value;
-            const status = document.getElementById('stat_'+id).value;
-
             const { error } = await supabaseClient.from('driver_records')
-                .update({ name, hkid, phone, license_type: license, status })
+                .update({ 
+                    name: document.getElementById('name_'+id).value,
+                    hkid: document.getElementById('hkid_'+id).value,
+                    phone: document.getElementById('phone_'+id).value,
+                    license_type: document.getElementById('lic_'+id).value,
+                    status: document.getElementById('stat_'+id).value 
+                })
                 .eq('id', id);
 
             if (error) alert("更新失敗: " + error.message);
-            else { alert("更新成功！"); loadData(); }
+            else alert("更新成功！");
         }
     </script>
 </body>
