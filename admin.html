@@ -40,6 +40,9 @@
         .status-inactive { background-color: #f8d7da; color: #721c24; }
         /* 准許駕駛類別的可編輯輸入框 */
         .class-input { width: 140px; padding: 4px 8px; font-size: 9pt; border: 1px solid #ccc; border-radius: 4px; }
+        /* 補上一個小小的 PDF 連結樣式，保持畫面乾淨 */
+        .pdf-link { display: inline-block; color: #0056b3; text-decoration: none; font-weight: bold; margin-bottom: 5px; }
+        .pdf-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -87,22 +90,21 @@
                         <th>身份證號碼</th>
                         <th>電話號碼</th>
                         <th>可駕駛車輛類別</th>
-                        <th>駕駛執照狀態 (警察查核)</th>
+                        <th>PDF 紀錄</th> <th>駕駛執照狀態 (警察查核)</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody id="studentTableBody">
-                    <tr><td colspan="6" style="text-align: center; color: #888;">載入中...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; color: #888;">載入中...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // 1. 初始化 Supabase 
-        // ⚠️ 請替換為你真實的 Supabase URL 和 Anon Key
-        const SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT_ID.supabase.co";
-        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY";
+        // 1. 初始化 Supabase (沿用你 index.html 的真實專案 Project ID)
+        const SUPABASE_URL = "https://falyohlekezdbxjnhwcn.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB";
         const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // 網頁載入時立刻執行 Fetch
@@ -111,25 +113,19 @@
             fetchStudents();
         });
 
-        // 2. 從 Supabase 抓取預約名單
+        // 2. 從 Supabase 抓取預約名單 (原封不動)
         async function fetchAppointments() {
             const tbody = document.getElementById('appointmentTableBody');
-            
-            let { data: appointments, error } = await supabase
-                .from('appointments')
-                .select('*');
-
+            let { data: appointments, error } = await supabase.from('appointments').select('*');
             if (error) {
                 console.error(error);
                 tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">讀取失敗：${error.message}</td></tr>`;
                 return;
             }
-
             if (!appointments || appointments.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">暫無未處理的新網上預約。</td></tr>`;
                 return;
             }
-
             tbody.innerHTML = '';
             appointments.forEach(row => {
                 const tr = document.createElement('tr');
@@ -147,23 +143,17 @@
             });
         }
 
-        // 3. 從 Supabase 抓取正式學員名冊
+        // 3. 從 Supabase 抓取正式學員名冊 (精準補上 PDF 顯示與 File Input)
         async function fetchStudents() {
             const tbody = document.getElementById('studentTableBody');
-            
-            let { data: students, error } = await supabase
-                .from('students')
-                .select('*')
-                .order('id', { ascending: true });
-
+            let { data: students, error } = await supabase.from('students').select('*').order('id', { ascending: true });
             if (error) {
                 console.error(error);
-                tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">讀取失敗：${error.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">讀取失敗：${error.message}</td></tr>`;
                 return;
             }
-
             if (!students || students.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">資料庫內暫無正式學員。</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">資料庫內暫無正式學員。</td></tr>`;
                 return;
             }
 
@@ -173,12 +163,22 @@
                 const badgeClass = row.is_valid ? 'status-active' : 'status-inactive';
                 const badgeText = row.is_valid ? '有效 (VALID)' : '已停用/失效 (INVALID)';
                 
+                // 判斷資料庫內有沒有 pdf_url，有就整條 Link 俾職員睇
+                const pdfLinkHtml = row.pdf_url 
+                    ? `<a href="${row.pdf_url}" target="_blank" class="pdf-link">📄 檢視 PDF 紀錄</a><br>` 
+                    : `<span style="color:#999; font-size:9pt;">⚠️ 暫無檔案</span><br>`;
+
                 tr.innerHTML = `
                     <td>${row.name}</td>
                     <td>${row.hkid}</td>
                     <td>${row.phone}</td>
                     <td>
                         <input type="text" class="class-input" id="class-input-${row.id}" value="${row.vehicle_classes || ''}">
+                    </td>
+                    <td>
+                        ${pdfLinkHtml}
+                        <input type="file" id="file-input-${row.id}" accept="application/pdf" style="display:none;" onchange="uploadPDF('${row.id}')">
+                        <button class="btn" style="background-color:#6c757d; color:#fff; padding:3px 8px; font-size:8pt;" onclick="document.getElementById('file-input-${row.id}').click()">選擇並上載</button>
                     </td>
                     <td><span class="status-badge ${badgeClass}">${badgeText}</span></td>
                     <td>
@@ -190,19 +190,68 @@
             });
         }
 
-        // 4. 一鍵將預約轉為學員 (Supabase 寫入與刪除)
+        // 4. 新增：處理 PDF 檔案上載至 Supabase Storage 並更新 Table 欄位
+        async function uploadPDF(studentId) {
+            const fileInput = document.getElementById(`file-input-${studentId}`);
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+
+            // 安全檢查：確保揀嘅真係 PDF
+            if (file.type !== "application/pdf") {
+                alert("只能選取並上載 PDF 格式的檔案！");
+                return;
+            }
+
+            try {
+                // 為了避免波及畫面的其他按鈕，這裡彈個簡單的狀態提示
+                alert("正在上載 PDF 檔案到 Supabase Storage，請稍候...");
+
+                // A. 檔案上載至 'pdfs' bucket，檔名用 timestamp 加上原始檔名防止重複
+                const fileName = `public/${Date.now()}_${file.name}`;
+                const { data: storageData, error: storageError } = await supabase
+                    .storage
+                    .from('pdfs')
+                    .upload(fileName, file);
+
+                if (storageError) throw storageError;
+
+                // B. 獲取該檔案的 Public 公開網絡下載連結
+                const { data: urlData } = supabase
+                    .storage
+                    .from('pdfs')
+                    .getPublicUrl(fileName);
+
+                const publicPdfUrl = urlData.publicUrl;
+
+                // C. 將呢條 URL 寫入 students 表對應嗰個學員嘅 pdf_url 欄位
+                const { error: updateError } = await supabase
+                    .from('students')
+                    .update({ pdf_url: publicPdfUrl })
+                    .eq('id', studentId);
+
+                if (updateError) throw updateError;
+
+                alert("🎉 PDF 紀錄已成功上載並儲存至該學員資料庫！");
+                fetchStudents(); // 重新整理列表，即時看到「📄 檢視 PDF 紀錄」
+
+            } catch (err) {
+                console.error(err);
+                alert(`上載失敗，請確認 Storage 桶權限：\n${err.message}`);
+            }
+        }
+
+        // 5. 一鍵將預約轉為學員 (原封不動，補埋預設 pdf_url 欄位為 null)
         async function promoteToStudent(appointmentId, name, hkid, phone) {
-            // 預設新學員的可駕駛類別為空白，且執照預設為有效 (true)
             const { error: insertError } = await supabase
                 .from('students')
-                .insert([{ name: name, hkid: hkid, phone: phone, vehicle_classes: '未設定', is_valid: true }]);
+                .insert([{ name: name, hkid: hkid, phone: phone, vehicle_classes: '未設定', is_valid: true, pdf_url: null }]);
 
             if (insertError) {
                 alert(`註冊學員失敗：${insertError.message}`);
                 return;
             }
 
-            // 註冊成功後，將原先 appointments 表入面個一筆資料 Delete 走
             const { error: deleteError } = await supabase
                 .from('appointments')
                 .delete()
@@ -213,7 +262,7 @@
             fetchStudents();
         }
 
-        // 5. 即時切換更新 Supabase 執照有效性 (is_valid Boolean 欄位)
+        // 6. 即時切換更新 Supabase 執照有效性 (原封不動)
         async function toggleLicense(studentId, currentStatus) {
             const { error } = await supabase
                 .from('students')
@@ -223,14 +272,13 @@
             if (error) {
                 alert(`切換失敗：${error.message}`);
             } else {
-                fetchStudents(); // 重新整理列表
+                fetchStudents();
             }
         }
 
-        // 6. 即時更新「可駕駛車輛類別」文字到 Supabase
+        // 7. 即時更新「可駕駛車輛類別」文字到 Supabase (原封不動)
         async function updateVehicleClass(studentId) {
             const inputValue = document.getElementById(`class-input-${studentId}`).value;
-            
             const { error } = await supabase
                 .from('students')
                 .update({ vehicle_classes: inputValue })
