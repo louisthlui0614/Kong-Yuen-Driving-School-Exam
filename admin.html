@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>港緣校務系統 - 職員後台</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #fdfaf2;
+            margin: 0; padding: 20px; color: #1a1a1a;
+        }
+        h1 { border-bottom: 3px solid #e6c229; padding-bottom: 10px; font-size: 22pt; }
+        h2 { font-size: 16pt; margin-top: 30px; color: #333; }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* 區塊排版 */
+        .section-box {
+            background: #fff; border: 1px solid #ebdca5;
+            padding: 20px; border-radius: 6px; margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        /* 表格樣式 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ebdca5; padding: 12px; text-align: left; }
+        th { background-color: #fffdec; font-weight: bold; }
+        tr:nth-child(even) { background-color: #fffdec; }
+
+        /* 按鈕 */
+        .btn {
+            padding: 6px 12px; border: none; border-radius: 4px;
+            cursor: pointer; font-weight: bold; font-size: 10pt;
+        }
+        .btn-approve { background-color: #e6c229; color: #000; }
+        .btn-approve:hover { background-color: #d4b220; }
+        .btn-delete { background-color: #ff4d4d; color: #fff; }
+        .btn-delete:hover { background-color: #cc0000; }
+        .btn-add { background-color: #333; color: #ebdca5; padding: 8px 15px; }
+        .btn-add:hover { background-color: #e6c229; color: #000; }
+
+        /* 設定欄排版 */
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-group input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        .status-badge {
+            padding: 3px 8px; border-radius: 12px; font-size: 9pt; font-weight: bold;
+        }
+        .status-pending { background-color: #ffecc2; color: #b37400; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🦁 港緣駕駛學院 - 智能校務後台</h1>
+
+    <div class="section-box">
+        <h2>📥 待處理網上預約申請</h2>
+        <table id="pendingTable">
+            <thead>
+                <tr>
+                    <th>登記時間</th>
+                    <th>中文姓名</th>
+                    <th>香港身份證</th>
+                    <th>電話號碼</th>
+                    <th>預約項目</th>
+                    <th>傳動</th>
+                    <th>首選時段</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="9" style="text-align:center;">正在載入資料...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="settings-grid">
+        <div class="section-box">
+            <h2>🚗 管理「考試項目」選單</h2>
+            <div class="input-group">
+                <input type="text" id="newExam" placeholder="例如：中型貨車">
+                <button class="btn btn-add" onclick="addExam()">新增項目</button>
+            </div>
+            <table id="examTable">
+                <thead><tr><th>項目名稱</th><th>操作</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="section-box">
+            <h2>⏱️ 管理「上課時段」選單</h2>
+            <div class="input-group">
+                <input type="text" id="newTime" placeholder="例如：僅限平日清晨 (07:00 - 09:00)">
+                <button class="btn btn-add" onclick="addTime()">新增時段</button>
+            </div>
+            <table id="timeTable">
+                <thead><tr><th>時段名稱</th><th>操作</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://falyohlekezdbxjnhwcn.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 初始化載入所有數據
+    window.onload = function() {
+        loadPendingBookings();
+        loadExams();
+        loadTimes();
+    };
+
+    // ================= 核心功能 1：讀取並審批預約 =================
+    async function loadPendingBookings() {
+        const { data, error } = await supabaseClient
+            .from('students')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+
+        const tbody = document.querySelector('#pendingTable tbody');
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">目前沒有待處理的預約。</td></tr>';
+            return;
+        }
+
+        data.forEach(row => {
+            const date = new Date(row.created_at).toLocaleString('zh-HK');
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date}</td>
+                    <td><strong>${row.name_zh}</strong></td>
+                    <td><code>${row.hkid}</code></td>
+                    <td>${row.phone}</td>
+                    <td>${row.exam_type}</td>
+                    <td>${row.gear_type}</td>
+                    <td>${row.preferred_time}</td>
+                    <td><span class="status-badge status-pending">待審核</span></td>
+                    <td>
+                        <button class="btn btn-approve" onclick="approveStudent(${row.id}, '${row.name_zh}')">確認註冊</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function approveStudent(id, name) {
+        if (!confirm(`確定要將「${name}」正式註冊為港緣學員嗎？`)) return;
+
+        const { error } = await supabaseClient
+            .from('students')
+            .update({ status: 'active' })
+            .eq('id', id);
+
+        if (error) {
+            alert('審批失敗：' + error.message);
+        } else {
+            alert(`【${name}】已成功註冊為正式學員！`);
+            loadPendingBookings();
+        }
+    }
+
+    // ================= 核心功能 2：動態考試項目管理 =================
+    async function loadExams() {
+        const { data } = await supabaseClient.from('settings_exams').select('*');
+        const tbody = document.querySelector('#examTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td><button class="btn btn-delete" onclick="deleteExam(${item.id})">刪除</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    async function addExam() {
+        const name = document.getElementById('newExam').value.trim();
+        if (!name) return;
+        const { error } = await supabaseClient.from('settings_exams').insert([{ name: name }]);
+        if (error) alert(error.message);
+        document.getElementById('newExam').value = '';
+        loadExams();
+    }
+
+    async function deleteExam(id) {
+        if (!confirm('確定刪除此考試項目？這不會影響已登記的舊學員。')) return;
+        await supabaseClient.from('settings_exams').delete().eq('id', id);
+        loadExams();
+    }
+
+    // ================= 核心功能 3：動態時段管理 =================
+    async function loadTimes() {
+        const { data } = await supabaseClient.from('settings_times').select('*');
+        const tbody = document.querySelector('#timeTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.slot_text}</td>
+                    <td><button class="btn btn-delete" onclick="deleteTime(${item.id})">刪除</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    async function addTime() {
+        const text = document.getElementById('newTime').value.trim();
+        if (!text) return;
+        const { error } = await supabaseClient.from('settings_times').insert([{ slot_text: text }]);
+        if (error) alert(error.message);
+        document.getElementById('newTime').value = '';
+        loadTimes();
+    }
+
+    async function deleteTime(id) {
+        if (!confirm('確定刪除此時段？')) return;
+        await supabaseClient.from('settings_times').delete().eq('id', id);
+        loadTimes();
+    }
+</script>
+</body>
+</html>
