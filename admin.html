@@ -7,92 +7,109 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     
     <script>
-        const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: false }
+    });
     </script>
 
     <style>
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; background-color: #f4f7f6; }
         header { padding: 20px 80px; background: #eef6ff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .logo-link { text-decoration: none; color: #003366; display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 1.5rem; }
+        .topbar a { margin-left: 30px; text-decoration: none; color: #555; font-weight: 600; }
         .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: white; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background: #003366; color: white; }
+        #calendar { margin-top: 50px; background: white; padding: 20px; border-radius: 10px; }
         #admin-content { display: none; }
         .login-box { text-align: center; padding: 100px; }
-        button { padding: 10px 20px; background: #ff6600; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        input { padding: 8px; margin: 5px; }
+        button { padding: 8px 15px; background: #ff6600; color: white; border: none; cursor: pointer; }
         footer { padding: 40px; background: #003366; color: white; text-align: center; }
-        .modal { display:none; position:fixed; top:20%; left:30%; background:white; padding:20px; border:1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000; }
     </style>
 </head>
 <body>
 
     <header>
-        <a href="index.html" style="text-decoration:none; color:#003366; font-weight:700; font-size:1.5rem;">港緣駕駛學院後台</a>
-        <nav class="topbar"><a href="index.html">首頁</a></nav>
+        <a href="index.html" class="logo-link"><span>港緣駕駛學院後台</span></a>
+        <nav class="topbar">
+            <a href="index.html">首頁</a>
+            <a href="booking.html">網上預約</a>
+            <a href="admin.html">管理後台</a>
+        </nav>
     </header>
 
     <div id="login-screen" class="login-box">
         <h2>管理員登入</h2>
-        <input type="text" id="username" placeholder="用戶名"><br><br>
-        <input type="password" id="password" placeholder="密碼"><br><br>
+        <input type="text" id="username" placeholder="用戶名">
+        <input type="password" id="password" placeholder="密碼">
         <button onclick="login()">登入</button>
     </div>
 
     <div id="admin-content" class="container">
         <h2>駕駛人士記錄</h2>
-        <button onclick="document.getElementById('addModal').style.display='block'">+ 新增記錄</button>
         <table id="driverTable">
-            <thead><tr><th>姓名</th><th>身份證</th><th>電話</th><th>牌照</th><th>狀態</th><th>PDF</th></tr></thead>
+            <thead>
+                <tr><th>姓名</th><th>身份證</th><th>電話</th><th>牌照</th><th>狀態</th><th>操作</th></tr>
+            </thead>
             <tbody></tbody>
         </table>
-        <div id='calendar' style="margin-top:50px;"></div>
+        <div id='calendar'></div>
     </div>
 
-    <!-- 新增記錄彈窗 -->
-    <div id="addModal" class="modal">
-        <h3>新增記錄</h3>
-        <input type="text" id="new_name" placeholder="姓名"><br><br>
-        <input type="text" id="new_hkid" placeholder="身份證"><br><br>
-        <button onclick="addRecord()">確認新增</button>
-        <button onclick="document.getElementById('addModal').style.display='none'">取消</button>
-    </div>
-
-    <footer><p>&copy; 2026 港緣駕駛學院.</p></footer>
+    <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
 
     <script>
         async function login() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
-            const { data } = await supabase.from('admin_users').select('*').eq('username', user).eq('password', pass).single();
+            const { data, error } = await supabaseClient.from('admin_users').select('*').eq('username', user).eq('password', pass).single();
             if (data) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('admin-content').style.display = 'block';
                 loadData();
-            } else alert("帳號或密碼錯誤！");
+            } else { alert("帳號或密碼錯誤！"); }
         }
 
         async function loadData() {
-            const { data: drivers } = await supabase.from('driver_records').select('*');
+            const { data: drivers } = await supabaseClient.from('driver_records').select('*');
             const tbody = document.querySelector('#driverTable tbody');
-            tbody.innerHTML = drivers?.map(d => `<tr><td>${d.name}</td><td>${d.hkid}</td><td>${d.phone}</td><td>${d.license_type}</td><td>${d.status}</td><td><a href="${d.pdf_url}" target="_blank">檢視</a></td></tr>`).join('');
+            tbody.innerHTML = '';
+            drivers?.forEach(d => {
+                tbody.innerHTML += `<tr>
+                    <td><input type="text" value="${d.name}" id="name_${d.id}"></td>
+                    <td><input type="text" value="${d.hkid}" id="hkid_${d.id}"></td>
+                    <td><input type="text" value="${d.phone}" id="phone_${d.id}"></td>
+                    <td><input type="text" value="${d.license_type}" id="lic_${d.id}"></td>
+                    <td><select id="stat_${d.id}"><option ${d.status=='有效'?'selected':''}>有效</option><option ${d.status=='無效'?'selected':''}>無效</option></select></td>
+                    <td><button onclick="updateRecord('${d.id}')">更新</button></td>
+                </tr>`;
+            });
 
-            const { data: bookings } = await supabase.from('bookings').select('*');
+            const { data: bookings } = await supabaseClient.from('bookings').select('*');
             const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth',
-                events: bookings?.map(b => ({ title: b.name + ' (' + b.license_type + ')', start: b.date }))
+                events: bookings?.map(b => ({ title: b.name, start: b.date }))
             });
             calendar.render();
         }
 
-        async function addRecord() {
-            const name = document.getElementById('new_name').value;
-            const hkid = document.getElementById('new_hkid').value;
-            await supabase.from('driver_records').insert([{ name, hkid, status: '有效' }]);
-            alert('新增成功');
-            document.getElementById('addModal').style.display = 'none';
-            loadData();
+        async function updateRecord(id) {
+            const name = document.getElementById('name_'+id).value;
+            const hkid = document.getElementById('hkid_'+id).value;
+            const phone = document.getElementById('phone_'+id).value;
+            const license = document.getElementById('lic_'+id).value;
+            const status = document.getElementById('stat_'+id).value;
+
+            const { error } = await supabaseClient.from('driver_records')
+                .update({ name, hkid, phone, license_type: license, status })
+                .eq('id', id);
+
+            if (error) alert("更新失敗: " + error.message);
+            else { alert("更新成功！"); loadData(); }
         }
     </script>
 </body>
