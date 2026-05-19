@@ -38,39 +38,49 @@
         <p>請填寫以下資料以預約您的駕駛考試</p>
     </header>
 
-    <section class="booking-section">
+    <section class="booking-section" id="booking">
+        <h2 class="section-title">學車網上預約</h2>
         <div class="form-container">
             <form id="appointmentForm" onsubmit="handleBooking(event)">
-                <div class="form-group">
-                    <label for="hkid">身份證號碼 (首4個字元，例：A123) *</label>
-                    <input type="text" id="hkid" required placeholder="例如：A123" maxlength="4">
-                </div>
-
                 <div class="form-group">
                     <label for="name">中文姓名 *</label>
                     <input type="text" id="name" required placeholder="例如：陳大文">
                 </div>
                 
                 <div class="form-group">
-                    <label for="exam_type">預約考試項目 *</label>
+                    <label for="id_card">身份證號碼 *</label>
+                    <input type="text" id="id_card" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\([0-9A-Z]\)$" title="請輸入完整的香港身份證號碼，格式如 A123456(7)">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">電話號碼 *</label>
+                    <input type="tel" id="phone" required placeholder="例如：91234567" pattern="[0-9]{8}">
+                </div>
+
+                <div class="form-group">
+                    <label for="exam_type">預約考試 *</label>
                     <select id="exam_type" required>
-                        </select>
+                        <option value="輕型貨車 - 丙部路試">輕型貨車 - 丙部路試</option>
+                        <option value="私家車 - 丙部路試">私家車 - 丙部路試</option>
+                        <option value="輕型貨車 - 合併試">輕型貨車 - 合併試</option>
+                        <option value="私家車 - 合併試">私家車 - 合併試</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
-                    <label>傳動系統</label>
-                    <input type="text" value="自動波" readonly>
+                    <label>傳動系統 *</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="gear_type" value="自動波" checked> 自動波</label>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="exam_date">考試日期 *</label>
-                    <input type="date" id="exam_date" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="exam_time">考試時間段 *</label>
-                    <select id="exam_time" required>
-                        </select>
+                    <label>預約考試時段 *</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="date" id="exam_date" required style="width: 45%;">
+                        <select id="exam_time_slot" required style="width: 55%;">
+                            </select>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-submit">提交預約申請</button>
@@ -81,58 +91,75 @@
     <footer>&copy; 2026 港緣駕駛學院</footer>
 
     <script>
-        // 頁面載入時，從 LocalStorage 讀取 admin 設定的選項
-        window.onload = function() {
-            // 預設資料 (如果 admin 還沒設定)
-            const defaultExams = ['輕型貨車合併試', '私家車合併試', '的士筆試'];
-            const defaultTimes = ['09:00 - 10:00', '11:00 - 12:00', '14:30 - 15:30'];
+        <script>
+        // 頁面載入時，自動從 localStorage 讀取後台設定的時間段
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTimeSlots();
+        });
 
-            const savedExams = JSON.parse(localStorage.getItem('adminExams')) || defaultExams;
-            const savedTimes = JSON.parse(localStorage.getItem('adminTimes')) || defaultTimes;
-
-            // 渲染選項
-            const examSelect = document.getElementById('exam_type');
-            savedExams.forEach(exam => {
-                examSelect.innerHTML += `<option value="${exam}">${exam}</option>`;
+        function loadTimeSlots() {
+            const timeSlotSelect = document.getElementById('exam_time_slot');
+            // 如果後台還沒設定，給予預設時間段
+            const defaultSlots = ["09:00 - 12:00", "13:00 - 16:00", "18:00 - 21:00"];
+            const savedSlots = JSON.parse(localStorage.getItem('admin_time_slots')) || defaultSlots;
+            
+            timeSlotSelect.innerHTML = '';
+            savedSlots.forEach(slot => {
+                const option = document.createElement('option');
+                option.value = slot;
+                option.textContent = slot;
+                timeSlotSelect.appendChild(option);
             });
-
-            const timeSelect = document.getElementById('exam_time');
-            savedTimes.forEach(time => {
-                timeSelect.innerHTML += `<option value="${time}">${time}</option>`;
-            });
-        };
+        }
 
         function handleBooking(event) {
             event.preventDefault();
             
-            const hkid = document.getElementById('hkid').value.toUpperCase();
             const name = document.getElementById('name').value;
-            const examType = document.getElementById('exam_type').value;
-            const examDate = document.getElementById('exam_date').value;
-            const examTime = document.getElementById('exam_time').value;
+            const id_card = document.getElementById('id_card').value.toUpperCase(); // 強制轉大寫
+            const phone = document.getElementById('phone').value;
+            const exam_type = document.getElementById('exam_type').value;
+            const gear = document.querySelector('input[name="gear_type"]:checked').value;
+            const exam_date = document.getElementById('exam_date').value;
+            const exam_time_slot = document.getElementById('exam_time_slot').value;
 
-            // 1. 儲存預約記錄
-            const newBooking = { hkid, name, examType, examDate, examTime, submitTime: new Date().toLocaleString() };
-            let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            // 建立預約紀錄物件
+            const newBooking = {
+                id: Date.now(),
+                name,
+                id_card,
+                phone,
+                exam_type,
+                gear,
+                date: exam_date,
+                time: exam_time_slot,
+                timestamp: new Date().toLocaleString()
+            };
+
+            // 儲存預約紀錄到 localStorage
+            let bookings = JSON.parse(localStorage.getItem('admin_bookings')) || [];
             bookings.push(newBooking);
-            localStorage.setItem('bookings', JSON.stringify(bookings));
+            localStorage.setItem('admin_bookings', JSON.stringify(bookings));
 
-            // 2. 更新/新增學員資訊 (供後台管理)
-            let students = JSON.parse(localStorage.getItem('students')) || {};
-            if(!students[hkid]) {
-                // 如果是新生，建立預設檔案
-                students[hkid] = { 
-                    hkid: hkid, 
-                    name: name, 
-                    licenseClass: examType, 
-                    status: '有效' 
-                };
+            // 同步自動更新或新增到學員資訊（若該身份證未存在過）
+            let students = JSON.parse(localStorage.getItem('admin_students')) || [];
+            const studentExists = students.some(s => s.id_card === id_card);
+            if (!studentExists) {
+                students.push({
+                    id_card: id_card,
+                    name: name,
+                    license_type: exam_type.split(' - ')[0], // 自動抓取如 "輕型貨車"
+                    status: '有效'
+                });
+                localStorage.setItem('admin_students', JSON.stringify(students));
             }
-            localStorage.setItem('students', JSON.stringify(students));
 
-            alert(`預約成功！\n${name} 同學，你已預約 ${examDate} ${examTime} 的 ${examType}。`);
+            alert(`感謝預約，${name}！\n我們已收到你的考試預約：\n【${exam_type} - ${exam_date} ${exam_time_slot}】`);
+            
+            // 重設表單
             document.getElementById('appointmentForm').reset();
         }
+    </script>
     </script>
 </body>
 </html>
