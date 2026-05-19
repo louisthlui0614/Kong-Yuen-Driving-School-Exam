@@ -278,127 +278,121 @@
     </section>
 
     <section class="booking-section" id="booking">
-        <h2 class="section-title">學車網上預約</h2>
-        <div class="form-container">
-            <form id="appointmentForm" onsubmit="handleBooking(event)">
-                <div class="form-group">
-                    <label for="name">中文姓名 *</label>
-                    <input type="text" id="name" required placeholder="例如：陳大文">
-                </div>
-                
-                <div class="form-group">
-                    <label for="id_card">身份證號碼 *</label>
-                    <input type="text" id="id_card" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\([0-9A-Z]\)$" title="請輸入完整的香港身份證號碼，格式如 A123456(7)">
-                </div>
-                
-                <div class="form-group">
-                    <label for="phone">電話號碼 *</label>
-                    <input type="tel" id="phone" required placeholder="例如：91234567" pattern="[0-9]{8}">
-                </div>
+    <h2 class="section-title">考試預約系統</h2>
+    <div class="form-container">
+        <form id="appointmentForm">
+            <div class="form-group">
+                <label for="name">中文姓名 *</label>
+                <input type="text" id="name" required placeholder="例如：陳大文">
+            </div>
 
-                <div class="form-group">
-                    <label for="exam_type">預約考試 *</label>
-                    <select id="exam_type" required>
-                        <option value="輕型貨車 - 丙部路試">輕型貨車 - 丙部路試</option>
-                        <option value="私家車 - 丙部路試">私家車 - 丙部路試</option>
-                        <option value="輕型貨車 - 合併試">輕型貨車 - 合併試</option>
-                        <option value="私家車 - 合併試">私家車 - 合併試</option>
+            <div class="form-group">
+                <label for="id_card">身份證號碼 * (例如: A1234567)</label>
+                <input type="text" id="id_card" required placeholder="完整身份證編號" pattern="^[A-Z][0-9]{6,10}.*$">
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">電話號碼 *</label>
+                <input type="tel" id="phone" required placeholder="例如：91234567" pattern="[0-9]{8}">
+            </div>
+
+            <div class="form-group">
+                <label>傳動系統 *</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="gear_type" value="自動波" checked disabled> 自動波 (僅提供自動波)</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="exam_type">預約考試項目 *</label>
+                <select id="exam_type" required>
+                    <option value="">載入中...</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label for="exam_date">考試日期 *</label>
+                    <input type="date" id="exam_date" required>
+                </div>
+                <div style="flex: 1;">
+                    <label for="time_slot">考試時段 *</label>
+                    <select id="time_slot" required>
+                        <option value="">載入中...</option>
                     </select>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label>傳動系統 *</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="gear_type" value="自動波" checked> 自動波</label>
-                    </div>
-                </div>
+            <button type="submit" class="btn-submit" id="submitBtn">提交預約申請</button>
+        </form>
+    </div>
+</section>
 
-                <div class="form-group">
-                    <label>預約考試時段 *</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="date" id="exam_date" required style="width: 45%;">
-                        <select id="exam_time_slot" required style="width: 55%;">
-                            </select>
-                    </div>
-                </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // 請替換為你自己的 Supabase URL 和 Key
+    const SUPABASE_URL = '你的_SUPABASE_URL';
+    const SUPABASE_KEY = '你的_SUPABASE_ANON_KEY';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-                <button type="submit" class="btn-submit">提交預約申請</button>
-            </form>
-        </div>
-    </section>
+    // 1. 初始化載入選項
+    async function initForm() {
+        // 載入考試選項
+        const { data: exams } = await supabase.from('exam_options').select('*');
+        const examSelect = document.getElementById('exam_type');
+        examSelect.innerHTML = exams.map(e => `<option value="${e.label}">${e.label}</option>`).join('');
 
-    <footer>
-        &copy; 2026 港緣駕駛學院 Kong Yuen Driving School. 版權所有。<br>
-        此系統僅供學術與學院管理用途。
-    </footer>
-    <footer>&copy; 2026 港緣駕駛學院</footer>
+        // 載入時段選項
+        const { data: slots } = await supabase.from('time_slots').select('*');
+        const slotSelect = document.getElementById('time_slot');
+        slotSelect.innerHTML = slots.map(s => `<option value="${s.label}">${s.label}</option>`).join('');
+    }
 
-    <script>
-        // 頁面載入時，自動從 localStorage 讀取後台設定的時間段
-        window.addEventListener('DOMContentLoaded', () => {
-            loadTimeSlots();
-        });
+    // 2. 處理預約提交
+    document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerText = '提交中...';
 
-        function loadTimeSlots() {
-            const timeSlotSelect = document.getElementById('exam_time_slot');
-            // 如果後台還沒設定，給予預設時間段
-            const defaultSlots = ["09:00 - 12:00", "13:00 - 16:00", "18:00 - 21:00"];
-            const savedSlots = JSON.parse(localStorage.getItem('admin_time_slots')) || defaultSlots;
-            
-            timeSlotSelect.innerHTML = '';
-            savedSlots.forEach(slot => {
-                const option = document.createElement('option');
-                option.value = slot;
-                option.textContent = slot;
-                timeSlotSelect.appendChild(option);
+        const formData = {
+            name: document.getElementById('name').value,
+            id_card: document.getElementById('id_card').value.toUpperCase(),
+            phone: document.getElementById('phone').value,
+            exam_type: document.getElementById('exam_type').value,
+            exam_date: document.getElementById('exam_date').value,
+            time_slot: document.getElementById('time_slot').value
+        };
+
+        try {
+            // 先確保學員資料存在 (Upsert)
+            await supabase.from('students').upsert({ 
+                id_card: formData.id_card, 
+                name: formData.name,
+                license_class: '未設定'
             });
-        }
 
-        function handleBooking(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('name').value;
-            const id_card = document.getElementById('id_card').value.toUpperCase(); // 強制轉大寫
-            const phone = document.getElementById('phone').value;
-            const exam_type = document.getElementById('exam_type').value;
-            const gear = document.querySelector('input[name="gear_type"]:checked').value;
-            const exam_date = document.getElementById('exam_date').value;
-            const exam_time_slot = document.getElementById('exam_time_slot').value;
+            // 寫入預約
+            const { error } = await supabase.from('bookings').insert([{
+                student_name: formData.name,
+                id_card: formData.id_card,
+                phone: formData.phone,
+                exam_type: formData.exam_type,
+                exam_date: formData.exam_date,
+                time_slot: formData.time_slot
+            }]);
 
-            // 建立預約紀錄物件
-            const newBooking = {
-                id: Date.now(),
-                name,
-                id_card,
-                phone,
-                exam_type,
-                gear,
-                date: exam_date,
-                time: exam_time_slot,
-                timestamp: new Date().toLocaleString()
-            };
-
-            // 儲存預約紀錄到 localStorage
-            let bookings = JSON.parse(localStorage.getItem('admin_bookings')) || [];
-            bookings.push(newBooking);
-            localStorage.setItem('admin_bookings', JSON.stringify(bookings));
-
-            // 同步自動更新或新增到學員資訊（若該身份證未存在過）
-            let students = JSON.parse(localStorage.getItem('admin_students')) || [];
-            const studentExists = students.some(s => s.id_card === id_card);
-            if (!studentExists) {
-                students.push({
-                    id_card: id_card,
-                    name: name,
-                    license_type: exam_type.split(' - ')[0], // 自動抓取如 "輕型貨車"
-                    status: '有效'
-                });
-                localStorage.setItem('admin_students', JSON.stringify(students));
-            }
-
-            alert(`感謝預約，${name}！\n我們已收到你的考試預約：\n【${exam_type} - ${exam_date} ${exam_time_slot}】`);
-            
-            // 重設表單
+            if (error) throw error;
+            alert('考試預約成功！');
             document.getElementById('appointmentForm').reset();
+        } catch (err) {
+            console.error(err);
+            alert('錯誤: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = '提交預約申請';
         }
-    </script>
+    });
+
+    initForm();
+</script>
