@@ -38,9 +38,7 @@
         .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 8pt; font-weight: bold; }
         .status-active { background-color: #d4edda; color: #155724; }
         .status-inactive { background-color: #f8d7da; color: #721c24; }
-        /* 准許駕駛類別的可編輯輸入框 */
         .class-input { width: 140px; padding: 4px 8px; font-size: 9pt; border: 1px solid #ccc; border-radius: 4px; }
-        /* 補上一個小小的 PDF 連結樣式，保持畫面乾淨 */
         .pdf-link { display: inline-block; color: #0056b3; text-decoration: none; font-weight: bold; margin-bottom: 5px; }
         .pdf-link:hover { text-decoration: underline; }
     </style>
@@ -90,7 +88,8 @@
                         <th>身份證號碼</th>
                         <th>電話號碼</th>
                         <th>可駕駛車輛類別</th>
-                        <th>PDF 紀錄</th> <th>駕駛執照狀態 (警察查核)</th>
+                        <th>PDF 紀錄</th>
+                        <th>駕駛執照狀態 (警察查核)</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -102,21 +101,21 @@
     </div>
 
     <script>
-        // 1. 初始化 Supabase (沿用你 index.html 的真實專案 Project ID)
+        // 1. 初始化 Supabase
         const SUPABASE_URL = "https://falyohlekezdbxjnhwcn.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB";
         const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 網頁載入時立刻執行 Fetch
         window.addEventListener('DOMContentLoaded', () => {
             fetchAppointments();
             fetchStudents();
         });
 
-        // 2. 從 Supabase 抓取預約名單 (原封不動)
+        // 2. 從 Supabase 撈取預約名單 (精準讀取新創立的 appointments 表)
         async function fetchAppointments() {
             const tbody = document.getElementById('appointmentTableBody');
             let { data: appointments, error } = await supabase.from('appointments').select('*');
+            
             if (error) {
                 console.error(error);
                 tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">讀取失敗：${error.message}</td></tr>`;
@@ -143,10 +142,11 @@
             });
         }
 
-        // 3. 從 Supabase 抓取正式學員名冊 (精準補上 PDF 顯示與 File Input)
+        // 3. 撈取正式學員
         async function fetchStudents() {
             const tbody = document.getElementById('studentTableBody');
             let { data: students, error } = await supabase.from('students').select('*').order('id', { ascending: true });
+            
             if (error) {
                 console.error(error);
                 tbody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">讀取失敗：${error.message}</td></tr>`;
@@ -163,7 +163,6 @@
                 const badgeClass = row.is_valid ? 'status-active' : 'status-inactive';
                 const badgeText = row.is_valid ? '有效 (VALID)' : '已停用/失效 (INVALID)';
                 
-                // 判斷資料庫內有沒有 pdf_url，有就整條 Link 俾職員睇
                 const pdfLinkHtml = row.pdf_url 
                     ? `<a href="${row.pdf_url}" target="_blank" class="pdf-link">📄 檢視 PDF 紀錄</a><br>` 
                     : `<span style="color:#999; font-size:9pt;">⚠️ 暫無檔案</span><br>`;
@@ -190,25 +189,20 @@
             });
         }
 
-        // 4. 新增：處理 PDF 檔案上載至 Supabase Storage 並更新 Table 欄位
+        // 4. 處理 PDF 檔案上載至 Storage
         async function uploadPDF(studentId) {
             const fileInput = document.getElementById(`file-input-${studentId}`);
             const file = fileInput.files[0];
-            
             if (!file) return;
-
-            // 安全檢查：確保揀嘅真係 PDF
             if (file.type !== "application/pdf") {
                 alert("只能選取並上載 PDF 格式的檔案！");
                 return;
             }
 
             try {
-                // 為了避免波及畫面的其他按鈕，這裡彈個簡單的狀態提示
                 alert("正在上載 PDF 檔案到 Supabase Storage，請稍候...");
-
-                // A. 檔案上載至 'pdfs' bucket，檔名用 timestamp 加上原始檔名防止重複
                 const fileName = `public/${Date.now()}_${file.name}`;
+                
                 const { data: storageData, error: storageError } = await supabase
                     .storage
                     .from('pdfs')
@@ -216,15 +210,9 @@
 
                 if (storageError) throw storageError;
 
-                // B. 獲取該檔案的 Public 公開網絡下載連結
-                const { data: urlData } = supabase
-                    .storage
-                    .from('pdfs')
-                    .getPublicUrl(fileName);
-
+                const { data: urlData } = supabase.storage.from('pdfs').getPublicUrl(fileName);
                 const publicPdfUrl = urlData.publicUrl;
 
-                // C. 將呢條 URL 寫入 students 表對應嗰個學員嘅 pdf_url 欄位
                 const { error: updateError } = await supabase
                     .from('students')
                     .update({ pdf_url: publicPdfUrl })
@@ -232,16 +220,16 @@
 
                 if (updateError) throw updateError;
 
-                alert("🎉 PDF 紀錄已成功上載並儲存至該學員資料庫！");
-                fetchStudents(); // 重新整理列表，即時看到「📄 檢視 PDF 紀錄」
+                alert("🎉 PDF 紀錄已成功上載並儲存！");
+                fetchStudents();
 
             } catch (err) {
                 console.error(err);
-                alert(`上載失敗，請確認 Storage 桶權限：\n${err.message}`);
+                alert(`上載失敗：\n${err.message}`);
             }
         }
 
-        // 5. 一鍵將預約轉為學員 (原封不動，補埋預設 pdf_url 欄位為 null)
+        // 5. 一鍵將預約轉為學員 (精準從新 appointments 表刪除)
         async function promoteToStudent(appointmentId, name, hkid, phone) {
             const { error: insertError } = await supabase
                 .from('students')
@@ -262,21 +250,18 @@
             fetchStudents();
         }
 
-        // 6. 即時切換更新 Supabase 執照有效性 (原封不動)
+        // 6. 切換有效性
         async function toggleLicense(studentId, currentStatus) {
             const { error } = await supabase
                 .from('students')
                 .update({ is_valid: !currentStatus })
                 .eq('id', studentId);
 
-            if (error) {
-                alert(`切換失敗：${error.message}`);
-            } else {
-                fetchStudents();
-            }
+            if (error) alert(`切換失敗：${error.message}`);
+            else fetchStudents();
         }
 
-        // 7. 即時更新「可駕駛車輛類別」文字到 Supabase (原封不動)
+        // 7. 更新類別文字
         async function updateVehicleClass(studentId) {
             const inputValue = document.getElementById(`class-input-${studentId}`).value;
             const { error } = await supabase
@@ -284,9 +269,8 @@
                 .update({ vehicle_classes: inputValue })
                 .eq('id', studentId);
 
-            if (error) {
-                alert(`更新失敗：${error.message}`);
-            } else {
+            if (error) alert(`更新失敗：${error.message}`);
+            else {
                 alert('可駕駛車輛類別已成功保存至 Supabase！');
                 fetchStudents();
             }
