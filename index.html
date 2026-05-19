@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院</title>
+    <title>港緣駕駛學院1</title>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -267,7 +267,7 @@
                 
                 <div class="form-group">
                     <label for="phone">電話號碼 *</label>
-                    <input type="tel" id="phone" required placeholder="例如：91234567" pattern="[0-9]{8}">
+                    <input type="tel" id="phone" required placeholder="Example: 91234567" pattern="[0-9]{8}">
                 </div>
 
                 <div class="form-group">
@@ -303,89 +303,86 @@
         此系統僅供學術與學院管理用途。
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        // 1. 設定你的 Supabase 和 Discord 配置
+        const SUPABASE_URL = 'https://falyohlekezdbxjnhwcn.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB';
+        const DISCORD_WEBHOOK_URL = 'https://discordapp.com/api/webhooks/1506184682893738076/FyeR1FBXdwJnol8EEnkg7OSFzrrg2YKvZkbPNHesgp3B0DoAOmg9IN7juSNyt6CMRAUW';
 
-<script>
-    // 1. 設定你的 Supabase 和 Discord 配置
-    const SUPABASE_URL = 'https://falyohlekezdbxjnhwcn.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB';
-    const DISCORD_WEBHOOK_URL = 'https://discordapp.com/api/webhooks/1506184682893738076/FyeR1FBXdwJnol8EEnkg7OSFzrrg2YKvZkbPNHesgp3B0DoAOmg9IN7juSNyt6CMRAUW';
+        // 初始化 Supabase 客戶端（修改變數名為 supabaseClient 防止衝突）
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 初始化 Supabase 客戶端
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        async function handleBooking(event) {
+            event.preventDefault();
 
-    async function handleBooking(event) {
-        event.preventDefault();
+            // 2. 擷取表單數據
+            const name = document.getElementById('name').value;
+            const hkid = document.getElementById('hkid').value.toUpperCase().trim(); 
+            const phone = document.getElementById('phone').value;
+            const exam = document.querySelector('input[name="exam_type"]:checked').value;
+            const gear = document.querySelector('input[name="gear_type"]:checked').value;
+            const time = document.getElementById('preferred_time').value;
 
-        // 2. 擷取表單數據
-        const name = document.getElementById('name').value;
-        const hkid = document.getElementById('hkid').value.toUpperCase().trim(); // 轉大寫並去空格
-        const phone = document.getElementById('phone').value;
-        const exam = document.querySelector('input[name="exam_type"]:checked').value;
-        const gear = document.querySelector('input[name="gear_type"]:checked').value;
-        const time = document.getElementById('preferred_time').value;
+            try {
+                // 3. 將資料寫入 Supabase 資料庫
+                const { data, error } = await supabaseClient
+                    .from('students')
+                    .insert([
+                        { 
+                            name_zh: name, 
+                            hkid: hkid, 
+                            phone: phone, 
+                            exam_type: exam, 
+                            gear_type: gear, 
+                            preferred_time: time,
+                            status: 'pending' 
+                        }
+                    ]);
 
-        try {
-            // 3. 將資料寫入 Supabase 資料庫
-            const { data, error } = await supabase
-                .from('students')
-                .insert([
-                    { 
-                        name_zh: name, 
-                        hkid: hkid, 
-                        phone: phone, 
-                        exam_type: exam, 
-                        gear_type: gear, 
-                        preferred_time: time,
-                        status: 'pending' // 預設為待審核預約
+                if (error) {
+                    if (error.code === '23505') {
+                        alert('該身份證號碼已被登記或已提交預約！');
+                    } else {
+                        throw error;
                     }
-                ]);
-
-            if (error) {
-                // 如果身份證重複，Supabase 會報錯
-                if (error.code === '23505') {
-                    alert('該身份證號碼已被登記或已提交預約！');
-                } else {
-                    throw error;
+                    return;
                 }
-                return;
+
+                // 4. 資料庫寫入成功後，同步發送 Discord 通知
+                const discordMessage = {
+                    username: "港緣校務系統",
+                    avatar_url: "https://cdn.discordapp.com/attachments/1499448680401338428/1505737096000962640/302d1eb0f176c742.png",
+                    embeds: [{
+                        title: "🔔 收到全新「網上預約考試」並已存入資料庫！",
+                        color: 15122985,
+                        fields: [
+                            { name: "👤 中文姓名", value: name, inline: true },
+                            { name: "📞 電話號碼", value: phone, inline: true },
+                            { name: "🪪 身份證號碼", value: `\`${hkid}\``, inline: false },
+                            { name: "🚗 預約考試項目", value: `${exam} (${gear})`, inline: true },
+                            { name: "⏱️ 首選上課時段", value: time, inline: true }
+                        ],
+                        timestamp: new Date().toISOString()
+                    }]
+                };
+
+                await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(discordMessage)
+                });
+
+                // 5. 提示學員成功
+                alert(`感謝預約，${name}！\n預約資料已成功登記，我們將會盡快聯絡你。`);
+                document.getElementById('appointmentForm').reset();
+
+            } catch (err) {
+                console.error('Error Details:', err);
+                alert('系統發生錯誤：' + (err.message || JSON.stringify(err)));
             }
-
-            // 4. 資料庫寫入成功後，同步發送 Discord 通知
-            const discordMessage = {
-                username: "港緣校務系統",
-                avatar_url: "https://cdn.discordapp.com/attachments/1499448680401338428/1505737096000962640/302d1eb0f176c742.png",
-                embeds: [{
-                    title: "🔔 收到全新「網上預約考試」並已存入資料庫！",
-                    color: 15122985,
-                    fields: [
-                        { name: "👤 中文姓名", value: name, inline: true },
-                        { name: "📞 電話號碼", value: phone, inline: true },
-                        { name: "🪪 身份證號碼", value: `\`${hkid}\``, inline: false },
-                        { name: "🚗 預約考試項目", value: `${exam} (${gear})`, inline: true },
-                        { name: "⏱️ 首選上課時段", value: time, inline: true }
-                    ],
-                    timestamp: new Date().toISOString()
-                }]
-            };
-
-            await fetch(DISCORD_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(discordMessage)
-            });
-
-            // 5. 提示學員成功
-            alert(`感謝預約，${name}！\n預約資料已成功登記，我們將會盡快聯絡你。`);
-            document.getElementById('appointmentForm').reset();
-
-        } catch (err) {
-            console.error('Error:', err);
-            alert('系統發生錯誤，請稍後再試。');
         }
-    }
-</script>
     </script>
 </body>
 </html>
