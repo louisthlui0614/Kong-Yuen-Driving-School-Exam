@@ -1,44 +1,262 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院 - 網上預約系統</title>
-    <style>
-        /* 保留原有的 CSS 基礎設定 */
-        *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: "Microsoft JhengHei", sans-serif; color: #1a1a1a; background-color: #fdfaf2; margin: 0; line-height: 1.6; }
-        .navbar { background-color: #fffdec; border-bottom: 3px solid #e6c229; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .nav-logo { font-size: 16pt; font-weight: bold; }
-        .nav-links { display: flex; gap: 20px; list-style: none; margin: 0; padding: 0; }
-        .nav-links a { text-decoration: none; color: #333; font-weight: bold; transition: color 0.2s; }
-        .btn-admin { background-color: #333; color: #ebdca5 !important; padding: 6px 12px; border-radius: 4px; }
-        .hero { background: linear-gradient(135deg, #ebdca5 0%, #fdfaf2 100%); padding: 60px 5%; text-align: center; border-bottom: 1px solid #ebdca5; }
-        .booking-section { padding: 40px 5%; }
-        .section-title { text-align: center; font-size: 20pt; margin-bottom: 30px; }
-        .form-container { max-width: 600px; margin: 0 auto; background-color: #fff; border: 2px solid #e6c229; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 11pt; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 11pt; }
-        .form-group input[readonly] { background-color: #f0f0f0; cursor: not-allowed; color: #555; }
-        .btn-submit { width: 100%; background-color: #e6c229; color: #000; border: none; padding: 12px; font-size: 12pt; font-weight: bold; border-radius: 4px; cursor: pointer; }
-        footer { text-align: center; padding: 20px; color: #666; font-size: 9pt; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>港緣駕駛學院 - 專業駕駛培訓王國</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Microsoft JhengHei", "Apple LiGothic Medium", sans-serif;
+            color: #1a1a1a;
+            background-color: #fdfaf2;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        
+        /* 導航欄 */
+        .navbar {
+            background-color: #fffdec;
+            border-bottom: 3px solid #e6c229;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16pt;
+            font-weight: bold;
+            color: #000;
+        }
+        .nav-logo img {
+            height: 45px;
+            width: auto;
+        }
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            font-size: 11pt;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover {
+            color: #e6c229;
+        }
+        .btn-admin {
+            background-color: #333;
+            color: #ebdca5 !important;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+        .btn-admin:hover {
+            background-color: #e6c229;
+            color: #000 !important;
+        }
+
+        /* Hero 橫幅 */
+        .hero {
+            background: linear-gradient(135deg, #ebdca5 0%, #fdfaf2 100%);
+            padding: 80px 5%;
+            text-align: center;
+            border-bottom: 1px solid #ebdca5;
+        }
+        .hero h1 {
+            font-size: 28pt;
+            margin: 0 0 15px 0;
+            color: #1a1a1a;
+        }
+        .hero p {
+            font-size: 14pt;
+            color: #555;
+            margin: 0 0 30px 0;
+        }
+        .btn-scroll {
+            background-color: #e6c229;
+            color: #000;
+            padding: 12px 30px;
+            font-size: 12pt;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.2s, transform 0.2s;
+        }
+        .btn-scroll:hover {
+            background-color: #d4b220;
+            transform: translateY(-2px);
+        }
+
+        /* 特色區塊 */
+        .features {
+            padding: 5px 5% 40px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section-title {
+            text-align: center;
+            font-size: 20pt;
+            margin: 40px 0;
+            position: relative;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 3px;
+            background-color: #e6c229;
+            margin: 8px auto 0 auto;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        .feature-card {
+            background-color: #fff;
+            border: 1px solid #ebdca5;
+            padding: 25px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .feature-card h3 {
+            margin: 10px 0;
+            font-size: 14pt;
+            color: #000;
+        }
+
+        /* 預約表格區塊 */
+        .booking-section {
+            background-color: #fffdec;
+            border-top: 1px solid #ebdca5;
+            border-bottom: 1px solid #ebdca5;
+            padding: 5px 5% 50px 5%;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            border: 2px solid #e6c229;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+            font-size: 10pt;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="tel"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 10pt;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #e6c229;
+            background-color: #fffdec;
+        }
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+        .btn-submit {
+            width: 100%;
+            background-color: #e6c229;
+            color: #000;
+            border: none;
+            padding: 12px;
+            font-size: 12pt;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover {
+            background-color: #d4b220;
+        }
+
+        /* 頁腳 */
+        footer {
+            text-align: center;
+            padding: 30px 5%;
+            font-size: 9pt;
+            color: #666;
+            background-color: #fdfaf2;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-logo">港緣駕駛學院</div>
-        <ul class="nav-links">
-            <li><a href="admin.html" class="btn-admin" target="_blank">進入職員後台</a></li>
-        </ul>
-    </nav>
 
-    <header class="hero">
-        <h1>考試預約系統</h1>
-        <p>請填寫以下資料以預約您的駕駛考試</p>
-    </header>
+    <nav class="navbar">
+        <div class="nav-logo">
+            <img src="https://cdn.discordapp.com/attachments/1499448680401338428/1505737096000962640/302d1eb0f176c742.png?ex=6a0bb672&is=6a0a64f2&hm=65ed2f4388298973630ac6ed85e4542da8206cd0979e5d2e7537e83930cf22c0&" alt="港緣 Logo">
+            港緣駕駛學院
+        </div>
+        <ul class="nav-links">
+            <li><a href="#">首頁</a></li>
+            <li><a href="#booking">網上預約</a></li>
+            <li><a href="#">執法查核</a></li>
+            <li><a href="#" class="btn-admin">職員後台</a></li>
+        </ul>
+    </nav>
 
-    <section class="booking-section" id="booking">
+    <header class="hero">
+        <h1>路政圓緣，穩健啟航</h1>
+        <p>提供專業輕型貨車及私家車駕駛培訓，高合格率，口碑載道。</p>
+        <a href="#booking" class="btn-scroll">立即預約學車</a>
+    </header>
+
+    <section class="features">
+        <h2 class="section-title">為什麼選擇港緣？</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div style="font-size: 24pt;">🚗</div>
+                <h3>新型教學車輛</h3>
+                <p>全車隊配備新型輕型貨車及私家車，保養極佳，學得放心。</p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 24pt;">⏱️</div>
+                <h3>彈性上課時間</h3>
+                <p>配合上班族及學生時間，平日、週末、日夜均可靈活約車。</p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 24pt;">📊</div>
+                <h3>系統化高效率</h3>
+                <p>首創智能學員校務管理系統，進度一目了然，隨時查看考試表格。</p>
+            </div>
+        </div>
+    </section>
+
+   <section class="booking-section" id="booking">
         <h2 class="section-title">學車網上預約</h2>
         <div class="form-container">
             <form id="appointmentForm" onsubmit="handleBooking(event)">
@@ -88,10 +306,12 @@
         </div>
     </section>
 
-    <footer>&copy; 2026 港緣駕駛學院</footer>
+    <footer>
+        &copy; 2026 港緣駕駛學院 Kong Yuen Driving School. 版權所有。<br>
+        此系統僅供學術與學院管理用途。
+    </footer>
 
-    <script>
-        <script>
+    <script>
         // 頁面載入時，自動從 localStorage 讀取後台設定的時間段
         window.addEventListener('DOMContentLoaded', () => {
             loadTimeSlots();
@@ -159,7 +379,6 @@
             // 重設表單
             document.getElementById('appointmentForm').reset();
         }
-    </script>
     </script>
 </body>
 </html>
