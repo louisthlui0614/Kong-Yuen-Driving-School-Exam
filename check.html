@@ -2,84 +2,80 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <title>駕駛記錄查核系統 - 執法部門專用</title>
+    <title>執法部門搜尋 - 港緣駕駛學院</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
+    </script>
     <style>
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; background-color: #f4f7f6; }
         header { padding: 20px 80px; background: #eef6ff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .logo-link { text-decoration: none; color: #003366; font-weight: 700; font-size: 1.5rem; }
-        .container { max-width: 800px; margin: 50px auto; padding: 30px; background: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .login-box, .search-box { text-align: center; }
-        input { padding: 12px; width: 80%; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 12px 25px; background: #003366; color: white; border: none; cursor: pointer; border-radius: 5px; }
-        #resultTable { margin-top: 30px; width: 100%; border-collapse: collapse; }
-        #resultTable th, #resultTable td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .container { max-width: 800px; margin: 30px auto; padding: 30px; background: white; border-radius: 10px; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { padding: 10px; flex-grow: 1; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; background: #003366; color: white; border: none; cursor: pointer; border-radius: 5px; }
         footer { padding: 40px; background: #003366; color: white; text-align: center; margin-top: 50px; }
+        #auth-screen { text-align: center; padding: 50px; }
+        #search-screen { display: none; }
     </style>
 </head>
 <body>
 
     <header>
-        <a href="index.html" class="logo-link">港緣駕駛學院系統</a>
-        <nav class="topbar">
-            <a href="index.html">首頁</a>
-            <a href="booking.html">網上預約</a>
-            <a href="admin.html">管理後台</a>
-        </nav>
+        <a href="index.html" class="logo-link">港緣駕駛學院</a>
     </header>
 
-    <div id="login-screen" class="container login-box">
-        <h2>執法部門查核系統</h2>
-        <input type="text" id="username" placeholder="用戶名 (policeadmin)">
-        <input type="password" id="password" placeholder="密碼 (440501)">
-        <button onclick="checkLogin()">登入系統</button>
+    <div id="auth-screen" class="container">
+        <h2>執法部門登入</h2>
+        <input type="text" id="p_user" placeholder="帳號">
+        <input type="password" id="p_pass" placeholder="密碼">
+        <button onclick="loginPolice()">登入</button>
     </div>
 
-    <div id="search-screen" class="container search-box" style="display:none;">
-        <h2>搜尋駕駛人士記錄</h2>
-        <input type="text" id="searchQuery" placeholder="請輸入姓名 或 身份證號碼">
-        <button onclick="searchDriver()">開始搜尋</button>
-        <table id="resultTable" style="display:none;">
-            <thead><tr><th>姓名</th><th>身份證</th><th>牌照類別</th><th>狀態</th></tr></thead>
-            <tbody id="resultBody"></tbody>
-        </table>
+    <div id="search-screen" class="container">
+        <h2>駕駛人士搜尋</h2>
+        <div class="search-box">
+            <input type="text" id="query" placeholder="輸入姓名或身份證號碼...">
+            <button onclick="searchDriver()">搜尋</button>
+        </div>
+        <div id="result"></div>
     </div>
 
-    <footer><p>&copy; 2026 港緣駕駛學院 - 執法部門授權查核系統</p></footer>
+    <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
 
     <script>
-        const supabase = supabase.createClient('https://egevptrvdatxpwxpwxhi.supabase.co', 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo');
-
-        function checkLogin() {
-            if (document.getElementById('username').value === 'policeadmin' && 
-                document.getElementById('password').value === '440501') {
-                document.getElementById('login-screen').style.display = 'none';
+        async function loginPolice() {
+            const user = document.getElementById('p_user').value;
+            const pass = document.getElementById('p_pass').value;
+            const { data } = await supabase.from('police_accounts').select('*').eq('username', user).eq('password', pass).single();
+            if (data) {
+                document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('search-screen').style.display = 'block';
-            } else {
-                alert("認證失敗！");
-            }
+            } else { alert("認證失敗"); }
         }
 
         async function searchDriver() {
-            const query = document.getElementById('searchQuery').value;
-            // 搜尋姓名 或 身份證 (OR 邏輯)
-            const { data, error } = await supabase.from('driver_records')
-                .select('*')
-                .or(`name.eq.${query},hkid.eq.${query}`);
+            const q = document.getElementById('query').value;
+            const { data } = await supabase.from('driver_records').select('*').or(`name.ilike.%${q}%,hkid.ilike.%${q}%`);
+            
+            const res = document.getElementById('result');
+            res.innerHTML = data.length ? '' : '找不到記錄';
+            data.forEach(d => {
+                res.innerHTML += `
+                    <div style="border:1px solid #ddd; padding:15px; margin-top:10px;">
+                        <p>姓名: ${d.name} | 身份證: ${d.hkid}</p>
+                        <p>目前狀態: ${d.status}</p>
+                        <select id="s_${d.id}"><option value="有效" ${d.status=='有效'?'selected':''}>有效</option><option value="無效" ${d.status=='無效'?'selected':''}>無效</option></select>
+                        <button onclick="updateStatus('${d.id}')">更新狀態</button>
+                    </div>`;
+            });
+        }
 
-            const tbody = document.getElementById('resultBody');
-            const table = document.getElementById('resultTable');
-            tbody.innerHTML = '';
-
-            if (data && data.length > 0) {
-                table.style.display = 'table';
-                data.forEach(d => {
-                    tbody.innerHTML += `<tr><td>${d.name}</td><td>${d.hkid}</td><td>${d.license_type}</td><td>${d.status}</td></tr>`;
-                });
-            } else {
-                alert("未找到相關記錄。");
-                table.style.display = 'none';
-            }
+        async function updateStatus(id) {
+            const status = document.getElementById('s_'+id).value;
+            await supabase.from('driver_records').update({ status }).eq('id', id);
+            alert("狀態已更新");
         }
     </script>
 </body>
