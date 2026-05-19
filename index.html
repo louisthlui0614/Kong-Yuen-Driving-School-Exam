@@ -152,12 +152,11 @@
 
     <script>
         // 1. 初始化 Supabase
-        // ⚠️ 請填入你真實的 Supabase 網址與 Key
         const SUPABASE_URL = "https://falyohlekezdbxjnhwcn.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB";
         const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ⚠️ 請填入你真實的 Discord Channel Webhook 網址
+        // Discord Channel Webhook 網址
         const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1506184682893738076/FyeR1FBXdwJnol8EEnkg7OSFzrrg2YKvZkbPNHesgp3B0DoAOmg9IN7juSNyt6CMRAUW";
 
         // 2. 處理表單提交
@@ -195,11 +194,11 @@
 
                 if (error) throw error;
 
-                // 動作 B：同步發送通知去 Discord Webhook（使用 Embedded 漂亮卡片格式）
+                // 動作 B：同步發送通知去 Discord Webhook
                 const discordMessage = {
                     embeds: [{
                         title: "🔔 收到全新網上預約考試申請！",
-                        color: 15122985, // 港緣金黃色色碼 (十六進制 e6c229 轉十進制)
+                        color: 15122985, // 港緣金黃色色碼
                         fields: [
                             { name: "👤 申請人姓名", value: name, inline: true },
                             { name: "📞 電話號碼", value: phone, inline: true },
