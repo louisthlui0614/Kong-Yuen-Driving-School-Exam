@@ -9,6 +9,9 @@
     const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // 請在此處填入你的 Discord Webhook Link
+    const DISCORD_WEBHOOK_URL = 'https://discordapp.com/api/webhooks/1506288384111284366/8k-Cel4iTV2UqpPEexCWe_zigDmLSkpnZdE-Qq9ALpQk931Izh589FHOp4a5IDn12y2s';
     </script>
 
     <style>
@@ -30,7 +33,6 @@
         <a href="index.html" class="logo-link">港緣駕駛學院</a>
         <nav class="topbar">
             <a href="check.html">首頁</a>
-            
         </nav>
     </header>
 
@@ -56,7 +58,7 @@
         async function loginPolice() {
             const user = document.getElementById('p_user').value;
             const pass = document.getElementById('p_pass').value;
-            const { data, error } = await supabaseClient.from('police_accounts').select('*').eq('username', user).eq('password', pass).single();
+            const { data } = await supabaseClient.from('police_accounts').select('*').eq('username', user).eq('password', pass).single();
             if (data) {
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('search-screen').style.display = 'block';
@@ -68,13 +70,13 @@
             const { data, error } = await supabaseClient.from('driver_records').select('*').or(`name.ilike.%${q}%,hkid.ilike.%${q}%`);
             
             const res = document.getElementById('result');
-            if (error) { console.error("搜尋錯誤:", error); alert("搜尋錯誤: " + error.message); return; }
+            if (error) { console.error(error); alert("搜尋錯誤"); return; }
             
             res.innerHTML = data && data.length ? '' : '找不到記錄';
             data?.forEach(d => {
                 res.innerHTML += `
-                    <div style="border:1px solid #ddd; padding:15px; margin-top:10px;">
-                        <p>姓名: ${d.name} | 身份證: ${d.hkid}</p>
+                    <div style="border:1px solid #ddd; padding:15px; margin-top:10px;" id="record_${d.id}">
+                        <p>姓名: <span id="name_${d.id}">${d.name}</span> | 身份證: ${d.hkid}</p>
                         <p>目前狀態: ${d.status}</p>
                         <select id="s_${d.id}"><option value="有效" ${d.status=='有效'?'selected':''}>有效</option><option value="無效" ${d.status=='無效'?'selected':''}>無效</option></select>
                         <button onclick="updateStatus('${d.id}')">更新狀態</button>
@@ -84,19 +86,30 @@
 
         async function updateStatus(id) {
             const status = document.getElementById('s_'+id).value;
-            // 關鍵修改：檢查 error 回傳
-            const { error } = await supabaseClient
-                .from('driver_records')
-                .update({ status: status })
-                .eq('id', id);
-
+            const name = document.getElementById('name_'+id).innerText;
+            
+            const { error } = await supabaseClient.from('driver_records').update({ status: status }).eq('id', id);
+            
             if (error) {
-                console.error("更新失敗:", error);
-                alert("更新失敗: " + error.message + "\n請確認 RLS 政策是否允許更新。");
+                alert("更新失敗: " + error.message);
             } else {
-                alert("狀態已成功更新至資料庫！");
-                searchDriver(); // 重新搜尋以刷新畫面
+                alert("狀態已成功更新！");
+                // 發送 Discord 通知
+                sendDiscordNotification(name, status);
+                searchDriver();
             }
+        }
+
+        async function sendDiscordNotification(name, status) {
+            const payload = {
+                content: `🚨 **駕駛記錄更新通知**\n姓名: ${name}\n新狀態: **${status}**\n更新時間: ${new Date().toLocaleString()}`
+            };
+            
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
         }
     </script>
 </body>
