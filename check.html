@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>港緣駕駛學院 - 駕駛執照有效性核對系統</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
@@ -45,6 +46,7 @@
         
         .btn-check { width: 100%; background-color: #333; color: #ebdca5; border: none; padding: 14px; font-size: 12pt; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
         .btn-check:hover { background-color: #000; color: #fff; }
+        .btn-check:disabled { background-color: #999; color: #ccc; cursor: not-allowed; }
 
         /* 結果顯示區域 */
         .result-box {
@@ -68,7 +70,7 @@
 
     <div class="check-container">
         <div class="check-title">駕駛執照有效性核對</div>
-        <div class="check-subtitle">經授權之執法人員請輸入持牌人【姓名】或【身份證號碼】（任填一項或全填）進行即時核對。</div>
+        <div class="check-subtitle">經授權之執法人員請輸入持牌人【姓名】或【身份證號碼】進行即時連線核對。</div>
         
         <form id="licenseCheckForm" onsubmit="handleLicenseCheck(event)">
             <div class="form-group">
@@ -77,9 +79,9 @@
             </div>
             <div class="form-group">
                 <label for="check_hkid">持牌人身份證號碼</label>
-                <input type="text" id="check_hkid" placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$">
+                <input type="text" id="check_hkid" placeholder="例如：A123456(7)">
             </div>
-            <button type="submit" class="btn-check">即時核對執照狀態</button>
+            <button type="submit" id="checkBtn" class="btn-check">即時核對執照狀態</button>
         </form>
         
         <div id="checkResult" class="result-box"></div>
@@ -90,66 +92,107 @@
     </footer>
 
     <script>
-        function handleLicenseCheck(event) {
+        // 1. 初始化 Supabase (對接你的真實資料庫)
+        const SUPABASE_URL = "https://falyohlekezdbxjnhwcn.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB";
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function handleLicenseCheck(event) {
             event.preventDefault();
+            
             const checkName = document.getElementById('check_name').value.trim();
-            const checkHkid = document.getElementById('check_hkid').value.trim().toUpperCase();
+            let checkHkid = document.getElementById('check_hkid').value.trim().toUpperCase();
             const resultDiv = document.getElementById('checkResult');
+            const checkBtn = document.getElementById('checkBtn');
 
             // 1. 安全檢查：確保使用者至少填寫了一個欄位
             if (!checkName && !checkHkid) {
-                resultDiv.style.display = "block";
-                resultDiv.style.backgroundColor = "#fff3cd";
-                resultDiv.style.color = "#856404";
-                resultDiv.style.border = "2px solid #ffeeba";
-                resultDiv.innerHTML = `⚠️ 請至少輸入「持牌人姓名」或「身份證號碼」其中一項欄位。`;
+                showResult("⚠️ 請至少輸入「持牌人姓名」或「身份證號碼」其中一項欄位。", "#fff3cd", "#856404", "#ffeeba");
                 return;
             }
 
-            // 2. 模擬後台資料庫數據（這裡假設資料庫有一筆陳大文的紀錄）
-            const mockDatabase = {
-                name: "陳大文",
-                hkid: "A123456(7)" // 注意這裡存的是帶括號的標準格式
-            };
+            // 按鈕動態效果
+            checkBtn.disabled = true;
+            checkBtn.innerText = "連線核對中...";
 
-            // 3. 比對邏輯：只要其中一個欄位填對了（或者兩個都填對了），就當作符合條件
-            let isMatch = false;
-            
-            if (checkName && checkHkid) {
-                // 兩個都填了，必須兩個都吻合
-                if (checkName === mockDatabase.name && checkHkid.includes("A123456")) isMatch = true;
-            } else if (checkName) {
-                // 只填了姓名
-                if (checkName === mockDatabase.name) isMatch = true;
-            } else if (checkHkid) {
-                // 只填了身份證號碼
-                if (checkHkid.includes("A123456")) isMatch = true;
-            }
+            try {
+                // 2. 構建 Supabase 查詢條件
+                let query = supabase.from('students').select('*');
+                
+                if (checkName) {
+                    query = query.eq('name', checkName);
+                }
+                
+                // 執行查詢
+                const { data: students, error } = await query;
 
-            // 4. 渲染結果
-            if (isMatch) {
-                resultDiv.style.display = "block";
-                resultDiv.style.backgroundColor = "#d4edda";
-                resultDiv.style.color = "#155724";
-                resultDiv.style.border = "2px solid #c3e6cb";
-                resultDiv.innerHTML = `
-                    <strong style="font-size: 14pt;">🟢 驗證結果：執照有效</strong><br><br>
-                    <b>持牌人姓名：</b>${mockDatabase.name}<br>
-                    <b>身份證號碼：</b>${mockDatabase.hkid.substring(0,4)}***(*)<br>
-                    <b>駕駛執照狀態：</b>有效 (VALID)<br>
-                    <b>已登記可駕駛類別：</b>輕型貨車、私家車<br>
-                    <small style="color: #666;">* 本結果由港緣學院後台系統即時核對提供。</small>
-                `;
-            } else {
-                resultDiv.style.display = "block";
-                resultDiv.style.backgroundColor = "#f8d7da";
-                resultDiv.style.color = "#721c24";
-                resultDiv.style.border = "2px solid #f5c6cb";
-                resultDiv.innerHTML = `
-                    <strong style="font-size: 14pt;">🔴 驗證結果：無效或查無此人</strong><br><br>
-                    系統內未有對應此輸入資料之有效駕駛執照紀錄。
-                `;
+                if (error) throw error;
+
+                // 3. 篩選與比對 (特別針對身份證格式做模糊與精確處理)
+                let matchedStudent = null;
+
+                if (students && students.length > 0) {
+                    if (checkHkid) {
+                        // 清除特殊字元以便進行乾淨的比對 (例如 A1234567)
+                        const cleanInputHkid = checkHkid.replace(/[^A-Z0-9]/g, '');
+                        
+                        matchedStudent = students.find(s => {
+                            const cleanDbHkid = s.hkid.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                            return cleanDbHkid.includes(cleanInputHkid) || cleanInputHkid.includes(cleanDbHkid);
+                        });
+                    } else {
+                        // 如果沒填 HKID，只憑姓名匹配，就抓第一個符合的
+                        matchedStudent = students[0];
+                    }
+                }
+
+                // 4. 渲染結果
+                if (matchedStudent) {
+                    // 根據資料庫內的 is_valid 狀態顯示綠色或紅色
+                    if (matchedStudent.is_valid) {
+                        const pdfHtml = matchedStudent.pdf_url 
+                            ? `<br><b>📄 關聯文件紀錄：</b><a href="${matchedStudent.pdf_url}" target="_blank" style="color: #155724; font-weight: bold;">點擊檢視歸檔 PDF</a>`
+                            : '';
+
+                        showResult(`
+                            <strong style="font-size: 14pt;">🟢 驗證結果：執照有效</strong><br><br>
+                            <b>持牌人姓名：</b>${matchedStudent.name}<br>
+                            <b>身份證號碼：</b>${matchedStudent.hkid.substring(0,4)}***(*)<br>
+                            <b>駕駛執照狀態：</b>有效 (VALID)<br>
+                            <b>已登記可駕駛類別：</b>${matchedStudent.vehicle_classes || '未設定'}${pdfHtml}<br>
+                            <small style="color: #666; display:block; margin-top:10px;">* 本結果由港緣學院後台系統即時動態提供。</small>
+                        `, "#d4edda", "#155724", "#c3e6cb");
+                    } else {
+                        showResult(`
+                            <strong style="font-size: 14pt;">🔴 驗證結果：此執照已被停用/失效</strong><br><br>
+                            <b>持牌人姓名：</b>${matchedStudent.name}<br>
+                            <b>駕駛執照狀態：</b>已停用/失效 (INVALID)<br>
+                            <small style="color: #666; display:block; margin-top:10px;">管理提示：該學員已被後台系統限制權限。</small>
+                        `, "#f8d7da", "#721c24", "#f5c6cb");
+                    }
+                } else {
+                    showResult(`
+                        <strong style="font-size: 14pt;">🔴 驗證結果：無效或查無此人</strong><br><br>
+                        系統資料庫內未有對應此輸入資料之正式學員或有效駕駛執照紀錄。
+                    `, "#f8d7da", "#721c24", "#f5c6cb");
+                }
+
+            } catch (err) {
+                console.error(err);
+                showResult(`❌ 系統連線失敗：${err.message}`, "#f8d7da", "#721c24", "#f5c6cb");
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.innerText = "即時核對執照狀態";
             }
+        }
+
+        function showResult(htmlContent, bgColor, textColor, borderColor) {
+            const resultDiv = document.getElementById('checkResult');
+            resultDiv.style.display = "block";
+            resultDiv.style.backgroundColor = bgColor;
+            resultDiv.style.color = textColor;
+            resultDiv.style.border = `2px solid ${borderColor}`;
+            resultDiv.innerHTML = htmlContent;
         }
     </script>
 </body>
