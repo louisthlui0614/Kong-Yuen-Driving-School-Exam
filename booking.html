@@ -8,7 +8,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700&display=swap');
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; background-color: #f4f7f6; }
         
-        /* 沿用 index.html 的 Header/Footer 樣式 */
         header { display: flex; justify-content: space-between; align-items: center; padding: 20px 80px; background: #eef6ff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .logo-link { display: flex; align-items: center; gap: 15px; text-decoration: none; color: #003366; font-weight: 700; font-size: 1.5rem; }
         .topbar a { margin-left: 30px; text-decoration: none; color: #555; font-weight: 600; }
@@ -37,12 +36,16 @@
             <input type="text" id="name" placeholder="中文姓名" required>
             <input type="text" id="idCard" placeholder="身份證編號" required>
             <input type="tel" id="phone" placeholder="電話號碼" required>
+            
             <label>考核牌照類別：</label>
             <select id="licenseType" required><option value="">請選擇</option></select>
+            
             <label>考試日期：</label>
             <input type="date" id="examDate" required>
+            
             <label>考試時段：</label>
             <select id="examSlot" required><option value="">請選擇</option></select>
+            
             <button type="submit">提交報名</button>
         </form>
     </div>
@@ -50,15 +53,34 @@
     <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
 
     <script>
-        // 【請務必替換下面的 anon_key】
-        const supabase = supabase.createClient('https://egevptrvdatxpwxpwxhi.supabase.co', '你的_ANON_KEY_放在這裡');
+        // 【注意】請將下方 '你的_ANON_KEY_放在這裡' 替換成 Supabase 真正的 API Key
+        const supabase = supabase.createClient(
+            'https://egevptrvdatxpwxpwxhi.supabase.co', 
+            '你的_ANON_KEY_放在這裡'
+        );
 
         async function loadOptions() {
-            const { data: types } = await supabase.from('license_types').select('name');
-            const { data: slots } = await supabase.from('time_slots').select('time_range');
-            types?.forEach(t => document.getElementById('licenseType').innerHTML += `<option>${t.name}</option>`);
-            slots?.forEach(s => document.getElementById('examSlot').innerHTML += `<option>${s.time_range}</option>`);
+            try {
+                // 讀取牌照類別
+                const { data: types, error: typeError } = await supabase.from('license_types').select('name');
+                if (typeError) console.error("牌照錯誤:", typeError);
+                
+                // 讀取時間段
+                const { data: slots, error: slotError } = await supabase.from('time_slots').select('time_range');
+                if (slotError) console.error("時段錯誤:", slotError);
+                
+                // 填入選單
+                types?.forEach(t => {
+                    document.getElementById('licenseType').innerHTML += `<option value="${t.name}">${t.name}</option>`;
+                });
+                slots?.forEach(s => {
+                    document.getElementById('examSlot').innerHTML += `<option value="${s.time_range}">${s.time_range}</option>`;
+                });
+            } catch (err) {
+                console.error("載入失敗:", err);
+            }
         }
+        
         loadOptions();
 
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {
