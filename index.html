@@ -156,19 +156,19 @@
         const SUPABASE_ANON_KEY = "sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB";
         const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Discord Channel Webhook 網址
+        // Discord Webhook 網址
         const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1506184682893738076/FyeR1FBXdwJnol8EEnkg7OSFzrrg2YKvZkbPNHesgp3B0DoAOmg9IN7juSNyt6CMRAUW";
 
         // 2. 處理表單提交
         async function handleBooking(event) {
             event.preventDefault();
             
-            // 停用按鈕避免重複提交
+            // 停用按鈕，畫面馬上切換「提交中」
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.innerText = "提交中...";
 
-            // 擷取表單欄位值
+            // 擷取欄位值
             const name = document.getElementById('name').value.trim();
             const hkid = document.getElementById('hkid').value.trim().toUpperCase();
             const phone = document.getElementById('phone').value.trim();
@@ -181,7 +181,7 @@
             let supabaseSuccess = false;
             let supabaseErrorMsg = "";
 
-            // 動作 A：寫入 Supabase 資料庫嘅 appointments 表（用 try-catch 包裹，確保不影響 Discord）
+            // 動作 A：寫入 Supabase 資料庫
             try {
                 const { data, error } = await supabase
                     .from('appointments')
@@ -196,23 +196,23 @@
                     ]);
 
                 if (error) {
-                    console.error("Supabase 詳細錯誤資訊：", error);
-                    supabaseErrorMsg = `${error.code} - ${error.message} (${error.details || '無詳細資料'})`;
+                    console.error("Supabase Error Details:", error);
+                    supabaseErrorMsg = `${error.code} - ${error.message}`;
                 } else {
                     supabaseSuccess = true;
                 }
             } catch (dbErr) {
-                console.error("資料庫連線崩潰：", dbErr);
+                console.error("Database Connection Crash:", dbErr);
                 supabaseErrorMsg = dbErr.message;
             }
 
-            // 動作 B：同步發送通知去 Discord Webhook（不論資料庫成功與否都強制發送，用作雙重保障）
+            // 動作 B：發送 Discord Webhook 通知（與資料庫解耦，確保一定會嘗試執行）
             try {
                 const statusTitle = supabaseSuccess ? "🔔 收到全新網上預約考試申請！" : "⚠️ [警告] 收到網上預約，但寫入資料庫失敗！";
                 const discordMessage = {
                     embeds: [{
                         title: statusTitle,
-                        color: supabaseSuccess ? 15122985 : 16711680, // 成功為金黃色，失敗為紅色
+                        color: supabaseSuccess ? 15122985 : 16711680, 
                         fields: [
                             { name: "👤 申請人姓名", value: name, inline: true },
                             { name: "📞 電話號碼", value: phone, inline: true },
@@ -225,7 +225,6 @@
                     }]
                 };
 
-                // 如果資料庫失敗，在 Discord 加上錯誤訊息方便排查
                 if (!supabaseSuccess) {
                     discordMessage.embeds[0].fields.push({
                         name: "❌ 資料庫錯誤回報",
@@ -241,16 +240,15 @@
                 });
 
             } catch (discordErr) {
-                console.error("Discord Webhook 發送失敗：", discordErr);
+                console.error("Discord Webhook Send Failed:", discordErr);
             }
 
-            // 3. 根據最終結果給予使用者回饋
+            // 3. 給使用者的前端回饋
             if (supabaseSuccess) {
                 alert(`感謝你，${name}！\n預約申請已成功提交，資料已寫入系統，職員頻道亦已收到通知。`);
                 document.getElementById('appointmentForm').reset();
             } else {
-                // 如果寫入失敗，直接把背後原因彈出來！
-                alert(`⚠️ 系統提示：資料已嘗試送出，但資料庫同步失敗。\n\n錯誤原因：${supabaseErrorMsg}\n\n* 職員渠道會嘗試處理您的申請。`);
+                alert(`⚠️ 系統提示：資料已嘗試送出，但資料庫同步失敗。\n\n錯誤原因：${supabaseErrorMsg}\n\n* 職員渠道會手動處理您的申請。`);
             }
 
             // 恢復按鈕
