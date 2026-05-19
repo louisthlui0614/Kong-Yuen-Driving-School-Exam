@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院</title>
+    <title>港緣駕駛學院 - 專業駕駛培訓王國</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
@@ -62,6 +63,7 @@
         .radio-group { display: flex; gap: 15px; margin-top: 5px; }
         .btn-submit { width: 100%; background-color: #e6c229; color: #000; border: none; padding: 12px; font-size: 12pt; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
         .btn-submit:hover { background-color: #d4b220; }
+        .btn-submit:disabled { background-color: #ccc; cursor: not-allowed; }
 
         footer { text-align: center; padding: 30px 5%; font-size: 9pt; color: #666; background-color: #fdfaf2; }
     </style>
@@ -139,7 +141,7 @@
                         <option value="週末及公眾假期">週末及公眾假期</option>
                     </select>
                 </div>
-                <button type="submit" class="btn-submit">提交預約申請</button>
+                <button type="submit" id="submitBtn" class="btn-submit">提交預約申請</button>
             </form>
         </div>
     </section>
@@ -149,11 +151,86 @@
     </footer>
 
     <script>
-        function handleBooking(event) {
+        // 1. 初始化 Supabase
+        // ⚠️ 請填入你真實的 Supabase 網址與 Key
+        const SUPABASE_URL = "https://falyohlekezdbxjnhwcn.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB";
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ⚠️ 請填入你真實的 Discord Channel Webhook 網址
+        const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1506184682893738076/FyeR1FBXdwJnol8EEnkg7OSFzrrg2YKvZkbPNHesgp3B0DoAOmg9IN7juSNyt6CMRAUW";
+
+        // 2. 處理表單提交
+        async function handleBooking(event) {
             event.preventDefault();
-            const name = document.getElementById('name').value;
-            alert(`感謝預約，${name}！\n我們已收到你的預約考試申請。`);
-            document.getElementById('appointmentForm').reset();
+            
+            // 停用按鈕避免重複提交
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "提交中...";
+
+            // 擷取表單欄位值
+            const name = document.getElementById('name').value.trim();
+            const hkid = document.getElementById('hkid').value.trim().toUpperCase();
+            const phone = document.getElementById('phone').value.trim();
+            const exam_type = document.querySelector('input[name="exam_type"]:checked').value;
+            const gear_type = document.querySelector('input[name="gear_type"]:checked').value;
+            const preferred_time = document.getElementById('preferred_time').value;
+
+            const fullExamString = `${exam_type} (${gear_type})`;
+
+            try {
+                // 動作 A：寫入 Supabase 資料庫嘅 appointments 表
+                const { data, error } = await supabase
+                    .from('appointments')
+                    .insert([
+                        { 
+                            name: name, 
+                            hkid: hkid, 
+                            phone: phone, 
+                            exam_type: fullExamString, 
+                            preferred_time: preferred_time 
+                        }
+                    ]);
+
+                if (error) throw error;
+
+                // 動作 B：同步發送通知去 Discord Webhook（使用 Embedded 漂亮卡片格式）
+                const discordMessage = {
+                    embeds: [{
+                        title: "🔔 收到全新網上預約考試申請！",
+                        color: 15122985, // 港緣金黃色色碼 (十六進制 e6c229 轉十進制)
+                        fields: [
+                            { name: "👤 申請人姓名", value: name, inline: true },
+                            { name: "📞 電話號碼", value: phone, inline: true },
+                            { name: "🪪 身份證號碼", value: `\`${hkid.substring(0,4)}***(*)\``, inline: true },
+                            { name: "🚗 報考項目", value: fullExamString, inline: true },
+                            { name: "⏰ 首選時段", value: preferred_time, inline: true }
+                        ],
+                        footer: { text: "港緣校務自動化系統 • 2026" },
+                        timestamp: new Date().toISOString()
+                    }]
+                };
+
+                // 用 fetch 射去 Discord
+                await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(discordMessage)
+                });
+
+                // 成功回饋
+                alert(`感謝你，${name}！\n預約申請已成功提交，資料已寫入系統，Discord 職員頻道亦已即時收到通知。`);
+                document.getElementById('appointmentForm').reset();
+
+            } catch (err) {
+                console.error(err);
+                alert(`提交失敗，請檢查網絡或憑證設定：\n${err.message}`);
+            } finally {
+                // 恢復按鈕
+                submitBtn.disabled = false;
+                submitBtn.innerText = "提交預約申請";
+            }
         }
     </script>
 </body>
