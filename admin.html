@@ -1,1 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>職員後台 - 港緣駕駛學院</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: "Microsoft JhengHei", sans-serif; color: #1a1a1a; background-color: #f4f6f9; margin: 0; }
+        .navbar { background-color: #333; color: white; padding: 15px 5%; display: flex; justify-content: space-between; }
+        .navbar a { color: #e6c229; text-decoration: none; font-weight: bold; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        
+        .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-top: 4px solid #e6c229; }
+        .card h2 { margin-top: 0; color: #333; font-size: 16pt; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        /* 表格樣式 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #fffdec; font-weight: bold; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        
+        /* 可編輯儲存格的樣式 */
+        .editable { background-color: #eef8ff; border: 1px dashed #2196F3; cursor: text; transition: 0.2s; }
+        .editable:focus { outline: none; background-color: #fff; border: 1px solid #2196F3; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        
+        .btn { padding: 8px 15px; background-color: #333; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #555; }
+        .btn-save { background-color: #4CAF50; }
+        
+        .config-area { display: flex; gap: 20px; }
+        .config-box { flex: 1; }
+        textarea { width: 100%; height: 100px; padding: 10px; font-family: inherit; }
+    </style>
+</head>
+<body>
 
+    <nav class="navbar">
+        <div class="nav-logo">🛠️ 港緣學院 - 職員管理後台</div>
+        <a href="index.html">返回前台預約頁</a>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>👥 學員資訊 (點擊藍底儲存格即可手動編輯)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>身份證號碼</th>
+                        <th>中文姓名</th>
+                        <th>牌照類別</th>
+                        <th>執照狀態 (有效/無效)</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsTableBody">
+                    </tbody>
+            </table>
+            <br>
+            <button class="btn btn-save" onclick="saveStudents()">💾 儲存學員變更</button>
+            <span id="saveStatus" style="color: green; margin-left: 10px; display: none;">儲存成功！</span>
+        </div>
+
+        <div class="card">
+            <h2>📅 預約考試記錄</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>提交時間</th>
+                        <th>身份證</th>
+                        <th>姓名</th>
+                        <th>考試項目</th>
+                        <th>考試日期</th>
+                        <th>考試時段</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingsTableBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ 前台選項設定 (設定預約頁面的選項)</h2>
+            <div class="config-area">
+                <div class="config-box">
+                    <label>可預約之考試項目 (每行一個)</label>
+                    <textarea id="configExams"></textarea>
+                </div>
+                <div class="config-box">
+                    <label>可預約之考試時段 (每行一個)</label>
+                    <textarea id="configTimes"></textarea>
+                </div>
+            </div>
+            <br>
+            <button class="btn" onclick="saveConfig()">更新前台選項</button>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            loadConfig();
+            loadBookings();
+            loadStudents();
+        };
+
+        // --- 處理設定 (考試與時段) ---
+        function loadConfig() {
+            const defaultExams = ['輕型貨車合併試', '私家車合併試', '的士筆試'];
+            const defaultTimes = ['09:00 - 10:00', '11:00 - 12:00', '14:30 - 15:30'];
+            
+            const exams = JSON.parse(localStorage.getItem('adminExams')) || defaultExams;
+            const times = JSON.parse(localStorage.getItem('adminTimes')) || defaultTimes;
+
+            document.getElementById('configExams').value = exams.join('\n');
+            document.getElementById('configTimes').value = times.join('\n');
+        }
+
+        function saveConfig() {
+            const exams = document.getElementById('configExams').value.split('\n').filter(e => e.trim() !== '');
+            const times = document.getElementById('configTimes').value.split('\n').filter(e => e.trim() !== '');
+            
+            localStorage.setItem('adminExams', JSON.stringify(exams));
+            localStorage.setItem('adminTimes', JSON.stringify(times));
+            alert('前台選項已更新！請刷新前台預約網頁查看。');
+        }
+
+        // --- 處理預約記錄 ---
+        function loadBookings() {
+            const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            const tbody = document.getElementById('bookingsTableBody');
+            tbody.innerHTML = '';
+            
+            if (bookings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暫無預約記錄</td></tr>';
+                return;
+            }
+
+            bookings.reverse().forEach(b => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${b.submitTime}</td>
+                        <td>${b.hkid}</td>
+                        <td>${b.name}</td>
+                        <td>${b.examType}</td>
+                        <td>${b.examDate}</td>
+                        <td>${b.examTime}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- 處理學員資訊 (可編輯表格) ---
+        function loadStudents() {
+            const students = JSON.parse(localStorage.getItem('students')) || {};
+            const tbody = document.getElementById('studentsTableBody');
+            tbody.innerHTML = '';
+
+            const keys = Object.keys(students);
+            if (keys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">暫無學員資料</td></tr>';
+                return;
+            }
+
+            // 生成表格，加入 contenteditable 讓 td 變成可以打字的輸入框
+            keys.forEach(hkid => {
+                const s = students[hkid];
+                tbody.innerHTML += `
+                    <tr data-hkid="${hkid}">
+                        <td>${s.hkid}</td> <td class="editable" contenteditable="true" data-field="name">${s.name}</td>
+                        <td class="editable" contenteditable="true" data-field="licenseClass">${s.licenseClass}</td>
+                        <td class="editable" contenteditable="true" data-field="status">${s.status}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveStudents() {
+            const students = JSON.parse(localStorage.getItem('students')) || {};
+            const rows = document.querySelectorAll('#studentsTableBody tr[data-hkid]');
+            
+            rows.forEach(row => {
+                const hkid = row.getAttribute('data-hkid');
+                const newName = row.querySelector('[data-field="name"]').innerText.trim();
+                const newLicense = row.querySelector('[data-field="licenseClass"]').innerText.trim();
+                const newStatus = row.querySelector('[data-field="status"]').innerText.trim();
+                
+                if(students[hkid]) {
+                    students[hkid].name = newName;
+                    students[hkid].licenseClass = newLicense;
+                    students[hkid].status = newStatus;
+                }
+            });
+
+            localStorage.setItem('students', JSON.stringify(students));
+            
+            const msg = document.getElementById('saveStatus');
+            msg.style.display = 'inline';
+            setTimeout(() => msg.style.display = 'none', 2000);
+        }
+    </script>
+</body>
+</html>
