@@ -7,8 +7,12 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     
     <script>
-        // 初始化 Supabase
-        const supabaseClient = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+        // 【重要】請務必將這兩行替換成你後台的真實 URL 和 Key
+        const SUPABASE_URL = 'https://你的專案ID.supabase.co';
+        const SUPABASE_KEY = '你的ANON_KEY';
+
+        // 初始化
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     </script>
 
     <style>
@@ -29,7 +33,6 @@
 
     <header><div class="logo-container"><strong>港緣駕駛學院後台</strong></div></header>
 
-    <!-- 密碼登入介面 -->
     <div id="login-screen" class="login-box">
         <h2>管理員登入</h2>
         <input type="text" id="username" placeholder="用戶名">
@@ -38,7 +41,6 @@
         <button onclick="login()">登入</button>
     </div>
 
-    <!-- 管理內容 -->
     <div id="admin-content" class="container">
         <h2>駕駛人士記錄</h2>
         <table id="driverTable">
@@ -55,7 +57,6 @@
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
 
-            // 檢查資料庫密碼是否匹配
             const { data, error } = await supabaseClient
                 .from('admin_users')
                 .select('*')
@@ -68,7 +69,7 @@
                 document.getElementById('admin-content').style.display = 'block';
                 loadData();
             } else {
-                alert("帳號或密碼錯誤！");
+                alert("帳號或密碼錯誤！" + (error ? "\n" + error.message : ""));
             }
         }
 
@@ -76,6 +77,7 @@
             // 載入駕駛記錄
             const { data: drivers } = await supabaseClient.from('driver_records').select('*');
             const tbody = document.querySelector('#driverTable tbody');
+            tbody.innerHTML = ''; // 清空舊內容
             drivers?.forEach(d => {
                 tbody.innerHTML += `<tr><td>${d.name}</td><td>${d.hkid}</td><td>${d.phone}</td><td>${d.license_type}</td><td>${d.status}</td><td><a href="${d.pdf_url}" target="_blank">檢視</a></td></tr>`;
             });
