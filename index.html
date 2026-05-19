@@ -142,7 +142,7 @@
             color: #000;
         }
 
-        /* 表格區塊通用樣式 */
+        /* 表格區塊樣式 */
         .booking-section {
             background-color: #fffdec;
             border-top: 1px solid #ebdca5;
@@ -271,9 +271,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label>可駕駛車輛類別 *</label>
+                    <label>預約考試項目 *</label>
                     <div class="radio-group">
-                        <label><input type="radio" name="vehicle_class" value="輕型貨車" checked> 輕型貨車（包含私家車牌照）</label>
+                        <label><input type="radio" name="exam_type" value="輕型貨車" checked> 輕型貨車（包含私家車牌照）</label>
                     </div>
                 </div>
 
@@ -328,26 +328,26 @@
         function handleBooking(event) {
             event.preventDefault();
             const name = document.getElementById('name').value;
-            const vehicleClass = document.querySelector('input[name="vehicle_class"]:checked').value;
-            alert(`感謝預約，${name}！\n我們已收到你的【${vehicleClass}】預約考試申請。`);
+            const examType = document.querySelector('input[name="exam_type"]:checked').value;
+            alert(`感謝預約，${name}！\n我們已收到你的【${examType}】預約考試申請。`);
             document.getElementById('appointmentForm').reset();
         }
 
-        // 處理執照有效性核對（目前前端模擬邏輯，未來連動後端資料庫與 Discord 審計）
+        // 處理執照有效性核對（模擬後台直接設定的資料，包含「可駕駛車輛類別」）
         function handleLicenseCheck(event) {
             event.preventDefault();
             const checkName = document.getElementById('check_name').value;
             const checkHkid = document.getElementById('check_hkid').value.toUpperCase();
             const resultDiv = document.getElementById('checkResult');
 
-            // 這裡做一個簡單的前端模擬測試效果：
-            // 如果輸入 "陳大文" 且身份證為 "A123456(7)"，模擬為有效執照
+            // 模擬測試效果：
             if(checkName === "陳大文" && checkHkid.includes("A123456")) {
                 resultDiv.style.display = "block";
                 resultDiv.style.backgroundColor = "#d4edda";
                 resultDiv.style.color = "#155724";
                 resultDiv.style.border = "1px solid #c3e6cb";
-                resultDiv.innerHTML = `🟢 驗證成功<br>持牌人：${checkName}<br>駕駛執照狀態：【 有效 (VALID) 】<br>准許駕駛車輛：輕型貨車、私家車`;
+                // 這裡的結果反映出：後台手動輸入的「可駕駛車輛類別」以及「有效狀態」
+                resultDiv.innerHTML = `🟢 驗證成功<br>持牌人：${checkName}<br>駕駛執照狀態：【 有效 (VALID) 】<br>已登記可駕駛類別：輕型貨車、私家車`;
             } else {
                 resultDiv.style.display = "block";
                 resultDiv.style.backgroundColor = "#f8d7da";
