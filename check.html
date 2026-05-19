@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院 - 駕駛執照核對系統</title>
+    <title>港緣駕駛學院 - 駕駛執照有效性核對系統</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
             font-family: "Microsoft JhengHei", "Apple LiGothic Medium", sans-serif;
             color: #1a1a1a;
-            background-color: #f4f1e6; /* 使用更嚴肅偏深的背景色 */
+            background-color: #f4f1e6;
             margin: 0; padding: 0; line-height: 1.6;
         }
         
         /* 導航欄 */
         .navbar {
-            background-color: #333; /* 執法頁面使用深色導航，增加專業感 */
+            background-color: #333;
             padding: 15px 5%;
             display: flex; justify-content: space-between; align-items: center;
         }
@@ -58,7 +58,7 @@
 
     <nav class="navbar">
         <div class="nav-logo">
-            <img src="https://cdn.discordapp.com/attachments/1499448680401338428/1505737096000962640/302d1eb0f176c742.png?ex=6a0bb672&is=6a0a64f2&hm=65ed2f4388298973630ac6ed85e4542da8206cd0979e5d2e7537e83930cf22c0&" alt="港緣 Logo">
+            <img src="logo.png" alt="港緣 Logo">
             港緣系統 - 執法查核專用
         </div>
         <ul class="nav-links">
@@ -68,16 +68,16 @@
 
     <div class="check-container">
         <div class="check-title">駕駛執照有效性核對</div>
-        <div class="check-subtitle">經授權之執法人員或相關部門，請輸入精確持牌人資料進行間接驗證。</div>
+        <div class="check-subtitle">經授權之執法人員請輸入持牌人【姓名】或【身份證號碼】（任填一項或全填）進行即時核對。</div>
         
         <form id="licenseCheckForm" onsubmit="handleLicenseCheck(event)">
             <div class="form-group">
-                <label for="check_name">持牌人姓名 *</label>
-                <input type="text" id="check_name" required placeholder="例如：陳大文">
+                <label for="check_name">持牌人姓名</label>
+                <input type="text" id="check_name" placeholder="例如：陳大文">
             </div>
             <div class="form-group">
-                <label for="check_hkid">持牌人身份證號碼 *</label>
-                <input type="text" id="check_hkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$">
+                <label for="check_hkid">持牌人身份證號碼</label>
+                <input type="text" id="check_hkid" placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$">
             </div>
             <button type="submit" class="btn-check">即時核對執照狀態</button>
         </form>
@@ -92,19 +92,50 @@
     <script>
         function handleLicenseCheck(event) {
             event.preventDefault();
-            const checkName = document.getElementById('check_name').value;
-            const checkHkid = document.getElementById('check_hkid').value.toUpperCase();
+            const checkName = document.getElementById('check_name').value.trim();
+            const checkHkid = document.getElementById('check_hkid').value.trim().toUpperCase();
             const resultDiv = document.getElementById('checkResult');
 
-            // 前端模擬測試邏輯（未來會向後端動態查核你在後台設定的牌照狀態）
-            if(checkName === "陳大文" && checkHkid.includes("A123456")) {
+            // 1. 安全檢查：確保使用者至少填寫了一個欄位
+            if (!checkName && !checkHkid) {
+                resultDiv.style.display = "block";
+                resultDiv.style.backgroundColor = "#fff3cd";
+                resultDiv.style.color = "#856404";
+                resultDiv.style.border = "2px solid #ffeeba";
+                resultDiv.innerHTML = `⚠️ 請至少輸入「持牌人姓名」或「身份證號碼」其中一項欄位。`;
+                return;
+            }
+
+            // 2. 模擬後台資料庫數據（這裡假設資料庫有一筆陳大文的紀錄）
+            const mockDatabase = {
+                name: "陳大文",
+                hkid: "A123456(7)" // 注意這裡存的是帶括號的標準格式
+            };
+
+            // 3. 比對邏輯：只要其中一個欄位填對了（或者兩個都填對了），就當作符合條件
+            let isMatch = false;
+            
+            if (checkName && checkHkid) {
+                // 兩個都填了，必須兩個都吻合
+                if (checkName === mockDatabase.name && checkHkid.includes("A123456")) isMatch = true;
+            } else if (checkName) {
+                // 只填了姓名
+                if (checkName === mockDatabase.name) isMatch = true;
+            } else if (checkHkid) {
+                // 只填了身份證號碼
+                if (checkHkid.includes("A123456")) isMatch = true;
+            }
+
+            // 4. 渲染結果
+            if (isMatch) {
                 resultDiv.style.display = "block";
                 resultDiv.style.backgroundColor = "#d4edda";
                 resultDiv.style.color = "#155724";
                 resultDiv.style.border = "2px solid #c3e6cb";
                 resultDiv.innerHTML = `
                     <strong style="font-size: 14pt;">🟢 驗證結果：執照有效</strong><br><br>
-                    <b>持牌人姓名：</b>${checkName}<br>
+                    <b>持牌人姓名：</b>${mockDatabase.name}<br>
+                    <b>身份證號碼：</b>${mockDatabase.hkid.substring(0,4)}***(*)<br>
                     <b>駕駛執照狀態：</b>有效 (VALID)<br>
                     <b>已登記可駕駛類別：</b>輕型貨車、私家車<br>
                     <small style="color: #666;">* 本結果由港緣學院後台系統即時核對提供。</small>
@@ -116,7 +147,7 @@
                 resultDiv.style.border = "2px solid #f5c6cb";
                 resultDiv.innerHTML = `
                     <strong style="font-size: 14pt;">🔴 驗證結果：無效或查無此人</strong><br><br>
-                    系統內未有對應此姓名及身份證號碼之有效駕駛執照紀錄。
+                    系統內未有對應此輸入資料之有效駕駛執照紀錄。
                 `;
             }
         }
