@@ -271,27 +271,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label>預約考試項目 *</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="exam_type" value="輕型貨車" checked> 輕型貨車（包含私家車牌照）</label>
-                    </div>
-                </div>
+    <label>預約考試項目 *</label>
+    <div class="radio-group" id="dynamic_exams">
+        <span style="font-size:10pt; color:#888;">正在載入最新考試項目...</span>
+    </div>
+</div>
 
-                <div class="form-group">
-                    <label>傳動系統 *</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="gear_type" value="自動波" checked> 自動波</label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="preferred_time">首選上課時段</label>
-                    <select id="preferred_time">
-                        <option value="平日日間 (09:00 - 18:00)">平日日間 (09:00 - 18:00)</option>
-                        <option value="平日夜間 (18:00 - 22:00)">平日夜間 (18:00 - 22:00)</option>
-                        <option value="週末及公眾假期">週末及公眾假期</option>
-                    </select>
-                </div>
+<div class="form-group">
+    <label for="preferred_time">首選上課時段</label>
+    <select id="preferred_time">
+        <option>正在載入時段...</option>
+    </select>
+</div>
 
                 <button type="submit" class="btn-submit">提交預約申請</button>
             </form>
