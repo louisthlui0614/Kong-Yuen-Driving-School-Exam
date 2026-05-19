@@ -210,7 +210,8 @@
         else { alert(`【${name}】已成功註冊！`); loadPendingBookings(); loadActiveStudents(); }
     }
 
-    // 2. 讀取正式學員名單（新增功能）
+    
+   // 2. 讀取正式學員名單（已將學員編號改為身份證號碼）
     async function loadActiveStudents() {
         const { data } = await supabaseClient.from('students').select('*').eq('status', 'active').order('id', { ascending: false });
         const tbody = document.querySelector('#activeTable tbody');
@@ -222,7 +223,7 @@
             
             tbody.innerHTML += `
                 <tr>
-                    <td>GY-${row.id}</td>
+                    <td><code>${row.hkid}</code></td>
                     <td><strong>${row.name_zh}</strong></td>
                     <td><code>${row.hkid}</code></td>
                     <td>${row.phone}</td><td>${row.exam_type}</td><td>${row.gear_type}</td>
