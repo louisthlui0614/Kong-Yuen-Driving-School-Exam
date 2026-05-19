@@ -9,10 +9,22 @@
 
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         
-        /* Header */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 80px; background: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .logo-container { display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 1.5rem; color: #003366; }
-        .logo-container img { height: 50px; }
+        /* Header - 調整背景色為極淡藍色 */
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 20px 80px; 
+            background: #eef6ff; /* 極淡的藍色背景 */
+            border-bottom: 2px solid #dbeafe; 
+        }
+
+        /* Logo 連結效果 */
+        .logo-link { display: flex; align-items: center; gap: 15px; text-decoration: none; color: #003366; }
+        .logo-container { display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 1.5rem; }
+        .logo-container img { height: 50px; transition: transform 0.2s; }
+        .logo-link:hover img { transform: scale(1.05); } /* 滑鼠移上 logo 時的提示 */
+
         .topbar a { margin-left: 30px; text-decoration: none; color: #555; font-weight: 600; transition: color 0.3s; }
         .topbar a:hover { color: #ff6600; }
         
@@ -21,7 +33,7 @@
         .intro h1 { color: #003366; font-size: 2.5rem; margin-bottom: 20px; }
         .intro img { max-width: 700px; width: 100%; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); margin: 30px 0; }
         
-        /* Features Section - 新增的區塊 */
+        /* Features */
         .features { display: flex; justify-content: space-around; padding: 60px 80px; background: #f4f7f6; }
         .feature-item { text-align: center; max-width: 300px; }
         .feature-item h3 { color: #003366; }
@@ -30,17 +42,21 @@
         .btn-reserve { display: inline-block; padding: 18px 40px; background: #ff6600; color: white; text-decoration: none; border-radius: 50px; font-weight: bold; transition: transform 0.2s, background 0.3s; }
         .btn-reserve:hover { background: #e65c00; transform: scale(1.05); }
 
-        /* Footer - 新增的版權區 */
+        /* Footer */
         footer { padding: 40px; background: #003366; color: white; text-align: center; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo">
-            <span>港緣駕駛學院</span>
-        </div>
+        <!-- 將 logo 和文字包在一個連結內 -->
+        <a href="index.html" class="logo-link">
+            <div class="logo-container">
+                <img src="logo.png" alt="Logo">
+                <span>港緣駕駛學院</span>
+            </div>
+        </a>
+        
         <nav class="topbar">
             <a href="#">首頁</a>
             <a href="#">網上預約</a>
@@ -51,12 +67,11 @@
     <section class="intro">
         <h1>專業駕駛 啟航未來</h1>
         <p>港緣駕駛學院致力於提供專業、安全的駕駛培訓服務。<br>擁有資深教練團隊及現代化教學設施，助您順利考取駕駛執照。</p>
-        <img src="駕駛考試路線圖.png" alt="學院簡介圖片">
+        <img src="https://via.placeholder.com/700x350?text=學院訓練場景" alt="學院簡介圖片">
         <br>
         <a href="#" class="btn-reserve">立即預約考試</a>
     </section>
 
-    <!-- 新增：我們的優勢區塊 -->
     <section class="features">
         <div class="feature-item">
             <h3>經驗豐富教練</h3>
