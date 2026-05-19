@@ -57,22 +57,18 @@
             'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo'
         );
 
-        // 載入牌照選項
         async function loadLicenseTypes() {
             const { data } = await supabaseClient.from('license_types').select('name');
             const sel = document.getElementById('licenseType');
             data?.forEach(t => sel.innerHTML += `<option value="${t.name}">${t.name}</option>`);
         }
 
-        // 檢查已預約時段並更新選單
         async function checkAvailability() {
             const date = document.getElementById('examDate').value;
             const slotSelect = document.getElementById('examSlot');
             if (!date) return;
 
-            // 1. 取得所有時段
             const { data: allSlots } = await supabaseClient.from('time_slots').select('time_range');
-            // 2. 取得該日期已預約的時段
             const { data: booked } = await supabaseClient.from('bookings').select('exam_slot').eq('exam_date', date);
             
             const bookedList = booked?.map(b => b.exam_slot) || [];
@@ -96,29 +92,37 @@
             
             if(!slot) return alert("請選擇時段");
 
-            btn.disabled = true;
-            btn.innerText = "提交中...";
-
-            const { error } = await supabaseClient.from('bookings').insert([{
+            // 整合資料物件
+            const formData = {
                 name: document.getElementById('name').value,
                 id_card: document.getElementById('idCard').value,
                 phone: document.getElementById('phone').value,
                 license_type: document.getElementById('licenseType').value,
                 exam_date: document.getElementById('examDate').value,
                 exam_slot: slot
-            }]);
+            };
+
+            btn.disabled = true;
+            btn.innerText = "提交中...";
+
+            const { error } = await supabaseClient.from('bookings').insert([formData]);
             
             if (error) {
                 alert("提交失敗: " + error.message);
                 btn.disabled = false; btn.innerText = "提交報名";
             } else {
+                // 使用正確的 formData 變數發送 Discord 通知
                 fetch('https://discordapp.com/api/webhooks/1506251281226793022/MUSLfFN8GP5oLdz8s1MSshQ7gCF61yw6nBQHRQKIh8ZOiUYH9zMS-e6CNwpHv8IL4gzG', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content: `✅ 新預約通知\n姓名: ${bookingData.name}\n類別: ${bookingData.license_type}\n日期: ${bookingData.exam_date}` })
-                });
+                    body: JSON.stringify({ 
+                        content: `✅ 新預約通知\n姓名: ${formData.name}\n類別: ${formData.license_type}\n日期: ${formData.exam_date}\n時段: ${formData.exam_slot}` 
+                    })
+                }).catch(err => console.error("Discord 通知發送失敗", err));
+
                 alert('預約成功！');
                 document.getElementById('bookingForm').reset();
+                document.getElementById('examSlot').innerHTML = '<option value="">請選擇</option>';
                 btn.disabled = false;
                 btn.innerText = "提交報名";
             }
