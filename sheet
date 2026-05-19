@@ -1,1 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <title>駕駛考試表格 - Driving Test Form</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 8mm 6mm;
+            background-color: #fdfaf2;
+        }
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Microsoft JhengHei", "Apple LiGothic Medium", sans-serif;
+            color: #1a1a1a;
+            background-color: #fdfaf2;
+            margin: 0;
+            padding: 0;
+            font-size: 8.5pt;
+            line-height: 1.2;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #e6c229;
+            padding-bottom: 4px;
+        }
+        .header h1 {
+            font-size: 12pt;
+            margin: 0 0 2px 0;
+            font-weight: bold;
+            color: #000;
+        }
+        .header h2 {
+            font-size: 9pt;
+            margin: 0;
+            font-weight: bold;
+            color: #222;
+        }
+        
+        input[type="text"] {
+            border: none;
+            border-bottom: 1px dashed #666;
+            background: transparent;
+            font-family: inherit;
+            font-size: 8.5pt;
+            padding: 0 2px;
+            color: #000;
+        }
+        input[type="checkbox"] {
+            transform: scale(1.05);
+            margin-right: 3px;
+            vertical-align: middle;
+            cursor: pointer;
+        }
 
+        /* Top Meta Block */
+        .meta-table {
+            display: table;
+            width: 100%;
+            margin-bottom: 8px;
+            background-color: #fffdec;
+            border: 1px solid #d3c294;
+        }
+        .meta-row {
+            display: table-row;
+        }
+        .meta-cell {
+            display: table-cell;
+            width: 50%;
+            padding: 4px 8px;
+            vertical-align: top;
+        }
+        .meta-cell.right {
+            text-align: right;
+        }
+        .meta-title {
+            font-weight: bold;
+            font-size: 9.5pt;
+            margin-bottom: 2px;
+        }
+        
+        /* Layout for Logo on the Left Side of the Cell Box */
+        .right-box-container {
+            display: table;
+            width: 100%;
+        }
+        .right-box-row {
+            display: table-row;
+        }
+        .left-logo-cell {
+            display: table-cell;
+            width: 75px;
+            vertical-align: middle;
+            text-align: center;
+            padding-right: 2px;
+            padding-left: 12px;
+        }
+        .right-content-cell {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+        }
+        
+        .centre-logo {
+            height: 60px;
+            width: auto;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: -150px;
+        }
+
+        /* Main Content 3-Column Layout */
+        .columns-container {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+        .column {
+            display: table-cell;
+            width: 33.333%;
+            vertical-align: top;
+            padding: 0 4px;
+            border-right: 1px dashed #e0d9bd;
+        }
+        .column:last-child {
+            border-right: none;
+        }
+
+        .col-header {
+            font-size: 7.5pt;
+            color: #555;
+            font-weight: bold;
+            border-bottom: 1px solid #ebdca5;
+            padding-bottom: 1px;
+            margin-bottom: 3px;
+        }
+
+        /* Section Block */
+        .section-block {
+            margin-bottom: 6px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 8.5pt;
+            background-color: #ebdca5;
+            padding: 1px 4px;
+            margin: 3px 0;
+            text-align: center;
+            border-radius: 2px;
+        }
+
+        /* Items Styling */
+        .item-row {
+            margin-bottom: 2px;
+            font-size: 8pt;
+            display: table;
+            width: 100%;
+        }
+        .cb-group {
+            display: table-cell;
+            width: 38px;
+            vertical-align: top;
+            white-space: nowrap;
+        }
+        .item-text {
+            display: table-cell;
+            vertical-align: top;
+            padding-left: 2px;
+        }
+
+        /* Footer & Results Section */
+        .footer-container {
+            display: table;
+            width: 100%;
+            margin-top: 8px;
+            border-top: 2px solid #e6c229;
+            padding-top: 6px;
+            page-break-inside: avoid;
+        }
+        .footer-left {
+            display: table-cell;
+            width: 55%;
+            vertical-align: top;
+            padding-right: 10px;
+        }
+        .footer-left div {
+            margin-bottom: 5px;
+        }
+        .footer-right {
+            display: table-cell;
+            width: 45%;
+            vertical-align: top;
+            background-color: #fff9df;
+            border: 2px solid #e6c229;
+            padding: 6px;
+            border-radius: 4px;
+        }
+        .result-title {
+            font-size: 10pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #e6c229;
+            padding-bottom: 2px;
+        }
+        .result-section {
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .result-section-title {
+            font-weight: bold;
+            font-size: 8pt;
+            margin-bottom: 1px;
+        }
+        .result-options {
+            font-size: 8.5pt;
+        }
+        
+        .legal-note {
+            text-align: center;
+            font-size: 7.5pt;
+            color: #666;
+            margin-top: 8px;
+            clear: both;
+        }
+
+        .print-btn-container {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .print-btn {
+            background-color: #e6c229;
+            color: #000;
+            border: none;
+            padding: 6px 15px;
+            font-size: 9.5pt;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        @media print {
+            .print-btn-container {
+                display: none;
+            }
+            body {
+                background-color: #fffdec;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-btn-container">
+        <button class="print-btn" onclick="prepareAndPrint()">儲存為 PDF / 進入列印模式 (Save to PDF / Print)</button>
+    </div>
+
+    <div class="header">
+        <h1>道路交通(駕駛執照)規例(第三百七十四B章)&nbsp;&nbsp;&nbsp;&nbsp;駕駛考試表格</h1>
+        <h2>ROAD TRAFFIC(DRIVING LICENCES) REGULATIONS (CAP. 374B) DRIVING TEST FORM</h2>
+    </div>
+
+    <div class="meta-table">
+        <div class="meta-row">
+            <div class="meta-cell">
+                <div class="meta-title"><input type="text" id="student-name" value="Name" style="font-weight:bold; font-size:10pt; width:120px;"></div>
+                <div style="margin-top: 4px;">傳動系統： <label>自動波</label></div>
+                <div style="margin-top: 4px;">身份證號碼：<input type="text" id="hkid-num" style="width:140px;"></div>
+            </div>
+            <div class="meta-cell right">
+                <div class="right-box-container">
+                    <div class="right-box-row">
+                        <div class="left-logo-cell">
+                            <img src="logo.png" alt="Logo" class="centre-logo">
+                        </div>
+                        <div class="right-content-cell">
+                            <div><input type="text" value="港緣駕駛學院" style="font-weight:bold; font-size:11pt; text-align:right; width:120px;"></div>
+                            <div style="margin-top: 4px;"><input type="text" id="meta-date" style="text-align:right; width:80px;"> &nbsp;&nbsp; <input type="text" value="輕型貨車" style="text-align:right; width:60px;"></div>
+                            <div style="margin-top: 4px;"><input type="text" id="meta-time-top" style="text-align:right; width:50px;"> &nbsp;&nbsp; <input type="text" value="合併試" style="text-align:right; width:60px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="columns-container">
+        <div class="column">
+            <div class="col-header">&nbsp;輕微&nbsp;嚴重&nbsp;&nbsp;錯誤項目</div>
+            
+            <div class="section-block">
+                <div class="section-title">斜坡停車</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">1. 未有查看交通情況</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">2. 車輛溜後</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">3. 停車位置不正確</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">斜坡開車</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">4. 未有查看交通情況</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">5. 車輛開動時跳動</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">6. 車輛溜後</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">窄路掉頭</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">7. 未有查看交通情況</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">8. 車輛溜後/滑前</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">9. 車輛停定前未有回軚</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">10. 車輛停定時仍然扭軚</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">11. 碰及物體</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">12. (___) 手軚</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">倒後及停泊</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">13. 未有查看交通情況</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">14. 車輛溜後/滑前</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">15. 泊車位置不正確</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">16. 碰及物體</div></div>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="col-header">&nbsp;輕微&nbsp;嚴重&nbsp;&nbsp;錯誤項目</div>
+            
+            <div class="section-block">
+                <div class="section-title">開車前準備</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">20. 開車前準備不足</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">開行</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">21. 未有查看交通情況</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">22. 車輛溜後/滑前</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">停車</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">23. 未有查看交通情況</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">24. 車輛溜後/滑前</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">25. 停車位置不正確</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">26. 離開車輛前未有將引擎關掉/或入波</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">駕駛意識</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">27. 轉換行車線前未有查看交通情況</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">28. 佔用迎面車輛使用之行車線</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">29. 在物體後急遽過軚駛出</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">30. 在物體後急遽過軚切入</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">31. 太接近其他物體</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">32. 未能在適當行車線上行駛</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">33. 未能依照其他車輛發出的訊號而作出適當反應</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">34. 不顧及其他道路使用者</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">速度控制</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">35. 超過限制速度</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">36. 未能調整車速以適應交通情況</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">訊號的使用</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">37. 發出不正確訊號</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">38. 未能及時發出訊號</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">39. 未有發出訊號</div></div>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="col-header">&nbsp;輕微&nbsp;嚴重&nbsp;&nbsp;錯誤項目</div>
+            
+            <div class="section-block">
+                <div class="section-title">駕駛技術</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">40. 駕駛錯誤導致考牌主任採取行動</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">41. 碰及物體</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">42. 空檔滑行</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">43. 轉波時發出撞擊聲</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">44. 未能選用適當波檔</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">45. 未能入波</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">46. 未有使用手掣</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">47. 警覺性及判斷力弱</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">48. 未能充分使用駕駛鏡</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">控制方面</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">51. 手掣使用不當</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">52. 腳掣使用不當</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">53. 油門使用不當</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">54. 離合器使用不當</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">55. 軚盤使用不當</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">超越物體</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">56. 未有查看交通情況</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">57. 在不適當情況下超越物體</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">路口</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">58. 未有查看交通情況</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">59. 轉彎時位置不正確</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">60. 不讓路給有優先權的車輛</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">61. 不利用先行權利</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">交通標誌 / 道路標記</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">62. 未有遵照限制標誌/道路標記的指示</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">63. 未有遵照警告/提示標誌或道路標記的指示</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">交通訊號</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">64. 未有遵照交通崗位的訊號</div></div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">65. 未有遵照交通燈號指示</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">行人過路線</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">66. 未有停車讓行人使用斑馬線</div></div>
+            </div>
+
+            <div class="section-block">
+                <div class="section-title">口試</div>
+                <div class="item-row"><div class="cb-group"><input type="checkbox"><input type="checkbox"></div><div class="item-text">73. 安全措施知識</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-container">
+        <div class="footer-left">
+            <div>時間：<input type="text" id="footer-time" style="width:180px;"></div>
+            <div>視力測驗： <label><input type="checkbox">及格</label></div>
+            <div>考牌主任簽署及編號：<input type="text" value="羅倫斯 KY 001" style="width:140px;"></div>
+        </div>
+        <div class="footer-right">
+            <div class="result-title">成績 Result</div>
+            
+            <div class="result-section">
+                <div class="result-section-title">乙部試 Part B Test</div>
+                <div class="result-options"><label><input type="checkbox">及格 Pass</label> &nbsp;&nbsp;&nbsp;&nbsp; <label><input type="checkbox">不及格 Fail</label></div>
+            </div>
+            
+            <div class="result-section">
+                <div class="result-section-title">丙部試 Part C Test</div>
+                <div class="result-options"><label><input type="checkbox">及格 Pass</label> &nbsp;&nbsp;&nbsp;&nbsp; <label><input type="checkbox">不及格 Fail</label></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="legal-note">
+        此考試成績須經港緣駕駛學院最後覆核為實<br>
+        This test result is subject to final verification by Kong Yuen Driving School.
+    </div>
+
+    <script>
+        // Automatic setup for current system date and times
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const now = new Date();
+            
+            // Format Date to DD/MM/YYYY
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const formattedDate = `${day}/${month}/${year}`;
+            
+            // Format Time to HH:MM
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const formattedTime = `${hours}:${minutes}`;
+            
+            // Assign values to elements
+            document.getElementById('meta-date').value = formattedDate;
+            document.getElementById('meta-time-top').value = formattedTime;
+            document.getElementById('footer-time').value = formattedTime;
+        });
+
+        // Function that dynamically handles custom output names during PDF generation
+        function prepareAndPrint() {
+            // Keep track of the original tab title
+            const originalTitle = document.title;
+            
+            // Retrieve data cleanly from our targeted input items
+            const rawName = document.getElementById('student-name').value.trim();
+            const rawHkid = document.getElementById('hkid-num').value.trim();
+            
+            // Set safety defaults if fields happen to be empty when clicking print
+            const cleanName = (rawName === "" || rawName === "Name") ? "未命名學員" : rawName;
+            const cleanHkid = (rawHkid === "") ? "無身份證資料" : rawHkid;
+            
+            // Dynamic combination string formatting: Name_HKID
+            document.title = `${cleanName}_${cleanHkid}`;
+            
+            // Trigger the browser system print execution environment
+            window.print();
+            
+            // Revert back safely immediately behind the scenes after execution context releases
+            setTimeout(() => {
+                document.title = originalTitle;
+            }, 100);
+        }
+    </script>
+</body>
+</html>
