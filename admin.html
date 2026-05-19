@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>管理後台 - 港緣駕駛學院</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- 引入 FullCalendar -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <style>
         body { font-family: 'Noto Sans HK', sans-serif; background: #f4f7f6; margin: 0; }
@@ -15,6 +14,7 @@
         th { background: #003366; color: white; }
         #calendar { margin-top: 50px; background: white; padding: 20px; border-radius: 10px; }
         footer { padding: 40px; background: #003366; color: white; text-align: center; }
+        #admin-content { display: none; } /* 預設隱藏內容 */
     </style>
 </head>
 <body>
@@ -23,7 +23,14 @@
         <div class="logo-container"><strong>港緣駕駛學院後台</strong></div>
     </header>
 
-    <div class="container">
+    <!-- 驗證區塊 -->
+    <div id="login-screen" style="text-align:center; padding: 100px;">
+        <h2>請登入以管理系統</h2>
+        <button onclick="loginWithDiscord()" style="padding:15px 30px; background:#5865F2; color:white; border:none; border-radius:5px; cursor:pointer;">使用 Discord 登入</button>
+    </div>
+
+    <!-- 管理員專用內容 -->
+    <div id="admin-content" class="container">
         <h2>駕駛人士記錄</h2>
         <table id="driverTable">
             <thead>
@@ -31,57 +38,68 @@
             </thead>
             <tbody></tbody>
         </table>
-
         <div id='calendar'></div>
     </div>
 
     <footer><p>&copy; 2026 港緣駕駛學院 Admin Panel.</p></footer>
 
-   <script>
-    const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+    <script>
+        // 統一初始化
+        const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
 
-    // 檢查登入狀態
-    async function checkAuth() {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-            // 如果沒登入，顯示登入按鈕
-            document.body.innerHTML = `
-                <div style="text-align:center; padding-top:100px;">
-                    <h1>請先登入</h1>
-                    <button onclick="loginWithDiscord()" style="padding:15px 30px; background:#5865F2; color:white; border:none; cursor:pointer;">
-                        使用 Discord 登入
-                    </button>
-                </div>
-            `;
+        // 登入邏輯
+        async function loginWithDiscord() {
+            await supabase.auth.signInWithOAuth({
+                provider: 'discord',
+                options: { redirectTo: window.location.href }
+            });
         }
-    }
 
-    // 驗證管理員權限
-async function checkAdminStatus() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { window.location.href = "index.html"; return; }
+        // 權限檢查與資料載入
+        async function checkAdminStatus() {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (!user) return; // 未登入，停留在登入畫面
 
-    // 取得 Discord ID
-    const discordId = user.identities[0].id;
+            const discordId = user.identities[0].id;
 
-    // 直接用 discord_id 去查詢，不需要牽扯到 id (SERIAL)
-    const { data: admin, error } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('discord_id', discordId)
-        .single();
+            // 檢查管理員清單
+            const { data: admin, error } = await supabase
+                .from('admins')
+                .select('*')
+                .eq('discord_id', discordId)
+                .single();
 
-    if (error || !admin) {
-        alert("存取拒絕：您不是管理員。");
-        window.location.href = "index.html";
-    } else {
-        // 驗證通過，顯示內容
-        document.getElementById('admin-content').style.display = 'block';
-    }
-}
+            if (admin) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                loadData(); // 驗證成功後才載入資料
+            } else {
+                alert("您沒有管理員權限！");
+                await supabase.auth.signOut();
+            }
+        }
 
-    checkAuth();
-</script>
+        // 載入資料
+        async function loadData() {
+            // 載入駕駛記錄
+            const { data: drivers } = await supabase.from('driver_records').select('*');
+            const tbody = document.querySelector('#driverTable tbody');
+            drivers?.forEach(d => {
+                tbody.innerHTML += `<tr><td>${d.name}</td><td>${d.hkid}</td><td>${d.phone}</td><td>${d.license_type}</td><td>${d.status}</td><td><a href="${d.pdf_url}" target="_blank">檢視</a></td></tr>`;
+            });
+
+            // 載入月曆
+            const { data: bookings } = await supabase.from('bookings').select('*');
+            const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: 'dayGridMonth',
+                events: bookings?.map(b => ({ title: b.name + ' - ' + b.license_type, start: b.date }))
+            });
+            calendar.render();
+        }
+
+        // 初始化檢查
+        checkAdminStatus();
+    </script>
 </body>
 </html>
