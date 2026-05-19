@@ -112,9 +112,15 @@
                 alert("提交失敗: " + error.message);
                 btn.disabled = false; btn.innerText = "提交報名";
             } else {
+                fetch('https://discordapp.com/api/webhooks/1506251281226793022/MUSLfFN8GP5oLdz8s1MSshQ7gCF61yw6nBQHRQKIh8ZOiUYH9zMS-e6CNwpHv8IL4gzG', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: `✅ 新預約通知\n姓名: ${bookingData.name}\n類別: ${bookingData.license_type}\n日期: ${bookingData.exam_date}` })
+                });
                 alert('預約成功！');
                 document.getElementById('bookingForm').reset();
-                btn.disabled = false; btn.innerText = "提交報名";
+                btn.disabled = false;
+                btn.innerText = "提交報名";
             }
         });
     </script>
