@@ -53,23 +53,21 @@
     <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
 
     <script>
-        // 【注意】請將下方 '你的_ANON_KEY_放在這裡' 替換成 Supabase 真正的 API Key
-        const supabase = supabase.createClient(
+        // 修正：使用全域的 supabase 物件，不使用 const 重新宣告
+        const supabaseClient = supabase.createClient(
             'https://egevptrvdatxpwxpwxhi.supabase.co', 
             'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo'
         );
 
         async function loadOptions() {
             try {
-                // 讀取牌照類別
-                const { data: types, error: typeError } = await supabase.from('license_types').select('name');
+                // 使用 supabaseClient 來呼叫
+                const { data: types, error: typeError } = await supabaseClient.from('license_types').select('name');
                 if (typeError) console.error("牌照錯誤:", typeError);
                 
-                // 讀取時間段
-                const { data: slots, error: slotError } = await supabase.from('time_slots').select('time_range');
+                const { data: slots, error: slotError } = await supabaseClient.from('time_slots').select('time_range');
                 if (slotError) console.error("時段錯誤:", slotError);
                 
-                // 填入選單
                 types?.forEach(t => {
                     document.getElementById('licenseType').innerHTML += `<option value="${t.name}">${t.name}</option>`;
                 });
@@ -98,7 +96,8 @@
                 exam_slot: document.getElementById('examSlot').value
             };
 
-            const { error } = await supabase.from('bookings').insert([bookingData]);
+            // 使用 supabaseClient
+            const { error } = await supabaseClient.from('bookings').insert([bookingData]);
             
             if (error) {
                 alert("提交失敗: " + error.message);
