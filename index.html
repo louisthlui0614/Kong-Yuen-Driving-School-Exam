@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院</title>
+    <title>港緣駕駛學院1</title>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -142,7 +142,7 @@
             color: #000;
         }
 
-        /* 預約表格區塊 */
+        /* 表格區塊樣式 */
         .booking-section {
             background-color: #fffdec;
             border-top: 1px solid #ebdca5;
@@ -218,14 +218,14 @@
 
     <nav class="navbar">
         <div class="nav-logo">
-            <img src="logo.png" alt="港緣 Logo">
+            <img src="https://cdn.discordapp.com/attachments/1499448680401338428/1505737096000962640/302d1eb0f176c742.png?ex=6a0bb672&is=6a0a64f2&hm=65ed2f4388298973630ac6ed85e4542da8206cd0979e5d2e7537e83930cf22c0&" alt="港緣 Logo">
             港緣駕駛學院
         </div>
         <ul class="nav-links">
             <li><a href="#">首頁</a></li>
             <li><a href="#booking">網上預約</a></li>
-            <li><a href="check.html">執法查核</a></li>
-            <li><a href="admin.html" class="btn-admin">職員後台</a></li>
+            <li><a href="#police-check">執法查核</a></li>
+            <li><a href="#" class="btn-admin">職員後台</a></li>
         </ul>
     </nav>
 
@@ -262,30 +262,59 @@
 
                 <div class="form-group">
                     <label for="hkid">身份證號碼 *</label>
-                    <input type="text" id="hkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$" title="請輸入正確的香港身份證格式，例如 A123456(7)">
+                    <input type="text" id="hkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$" title="請輸入正確的香港身份證格式">
                 </div>
                 
                 <div class="form-group">
                     <label for="phone">電話號碼 *</label>
-                    <input type="tel" id="phone" required placeholder="Example: 91234567" pattern="[0-9]{8}">
+                    <input type="tel" id="phone" required placeholder="例如：91234567" pattern="[0-9]{8}">
                 </div>
 
                 <div class="form-group">
-    <label>預約考試項目 *</label>
-    <div class="radio-group" id="dynamic_exams">
-        <span style="font-size:10pt; color:#888;">正在載入最新考試項目...</span>
-    </div>
-</div>
+                    <label>預約考試項目 *</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="exam_type" value="輕型貨車" checked> 輕型貨車（包含私家車牌照）</label>
+                    </div>
+                </div>
 
-<div class="form-group">
-    <label for="preferred_time">首選上課時段</label>
-    <select id="preferred_time">
-        <option>正在載入時段...</option>
-    </select>
-</div>
+                <div class="form-group">
+                    <label>傳動系統 *</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="gear_type" value="自動波" checked> 自動波</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="preferred_time">首選上課時段</label>
+                    <select id="preferred_time">
+                        <option value="平日日間 (09:00 - 18:00)">平日日間 (09:00 - 18:00)</option>
+                        <option value="平日夜間 (18:00 - 22:00)">平日夜間 (18:00 - 22:00)</option>
+                        <option value="週末及公眾假期">週末及公眾假期</option>
+                    </select>
+                </div>
 
                 <button type="submit" class="btn-submit">提交預約申請</button>
             </form>
+        </div>
+    </section>
+
+    <section class="booking-section" id="police-check" style="background-color: #f7f5e6; border-top: none;">
+        <h2 class="section-title">執法及相關部門 - 駕駛執照有效性核對</h2>
+        <div class="form-container" style="border-color: #333;">
+            <p style="font-size: 10pt; color: #666; margin-top: 0; text-align: center;">經授權之執法人員請輸入持牌人精確資料進行即時核對。</p>
+            <form id="licenseCheckForm" onsubmit="handleLicenseCheck(event)">
+                <div class="form-group">
+                    <label for="check_name">持牌人姓名 *</label>
+                    <input type="text" id="check_name" required placeholder="例如：陳大文">
+                </div>
+                <div class="form-group">
+                    <label for="check_hkid">持牌人身份證號碼 *</label>
+                    <input type="text" id="check_hkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$">
+                </div>
+                <button type="submit" class="btn-submit" style="background-color: #333; color: #ebdca5;">即時核對執照狀態</button>
+            </form>
+            
+            <div id="checkResult" style="margin-top: 20px; padding: 15px; border-radius: 4px; display: none; text-align: center; font-weight: bold;"></div>
         </div>
     </section>
 
@@ -294,111 +323,37 @@
         此系統僅供學術與學院管理用途。
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script>
-        // 在初始化客戶端 const supabaseClient = ... 之後加入這段自動同步程式碼：
-async function initFormOptions() {
-    // 1. 動態讀取考試項目並生成 Radio Buttons
-    const { data: exams } = await supabaseClient.from('settings_exams').select('*');
-    const examContainer = document.getElementById('dynamic_exams');
-    if (exams && exams.length > 0) {
-        examContainer.innerHTML = '';
-        exams.forEach((item, index) => {
-            examContainer.innerHTML += `
-                <label><input type="radio" name="exam_type" value="${item.name}" ${index === 0 ? 'checked' : ''}> ${item.name}</label>
-            `;
-        });
-    }
-
-    // 2. 動態讀取時段並生成 Dropdown Options
-    const { data: times } = await supabaseClient.from('settings_times').select('*');
-    const timeSelect = document.getElementById('preferred_time');
-    if (times && times.length > 0) {
-        timeSelect.innerHTML = '';
-        times.forEach(item => {
-            timeSelect.innerHTML += `<option value="${item.slot_text}">${item.slot_text}</option>`;
-        });
-    }
-}
-
-// 執行載入選單
-initFormOptions();
-        // 1. 設定你的 Supabase 和 Discord 配置
-        const SUPABASE_URL = 'https://falyohlekezdbxjnhwcn.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB';
-        const DISCORD_WEBHOOK_URL = 'https://discordapp.com/api/webhooks/1506184682893738076/FyeR1FBXdwJnol8EEnkg7OSFzrrg2YKvZkbPNHesgp3B0DoAOmg9IN7juSNyt6CMRAUW';
-
-        // 初始化 Supabase 客戶端（修改變數名為 supabaseClient 防止衝突）
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        async function handleBooking(event) {
+        // 處理預約表單提交
+        function handleBooking(event) {
             event.preventDefault();
-
-            // 2. 擷取表單數據
             const name = document.getElementById('name').value;
-            const hkid = document.getElementById('hkid').value.toUpperCase().trim(); 
-            const phone = document.getElementById('phone').value;
-            const exam = document.querySelector('input[name="exam_type"]:checked').value;
-            const gear = document.querySelector('input[name="gear_type"]:checked').value;
-            const time = document.getElementById('preferred_time').value;
+            const examType = document.querySelector('input[name="exam_type"]:checked').value;
+            alert(`感謝預約，${name}！\n我們已收到你的【${examType}】預約考試申請。`);
+            document.getElementById('appointmentForm').reset();
+        }
 
-            try {
-                // 3. 將資料寫入 Supabase 資料庫
-                const { data, error } = await supabaseClient
-                    .from('students')
-                    .insert([
-                        { 
-                            name_zh: name, 
-                            hkid: hkid, 
-                            phone: phone, 
-                            exam_type: exam, 
-                            gear_type: gear, 
-                            preferred_time: time,
-                            status: 'pending' 
-                        }
-                    ]);
+        // 處理執照有效性核對（模擬後台直接設定的資料，包含「可駕駛車輛類別」）
+        function handleLicenseCheck(event) {
+            event.preventDefault();
+            const checkName = document.getElementById('check_name').value;
+            const checkHkid = document.getElementById('check_hkid').value.toUpperCase();
+            const resultDiv = document.getElementById('checkResult');
 
-                if (error) {
-                    if (error.code === '23505') {
-                        alert('該身份證號碼已被登記或已提交預約！');
-                    } else {
-                        throw error;
-                    }
-                    return;
-                }
-
-                // 4. 資料庫寫入成功後，同步發送 Discord 通知
-                const discordMessage = {
-                    username: "港緣校務系統",
-                    avatar_url: "https://cdn.discordapp.com/attachments/1499448680401338428/1505737096000962640/302d1eb0f176c742.png",
-                    embeds: [{
-                        title: "🔔 收到全新「網上預約考試」並已存入資料庫！",
-                        color: 15122985,
-                        fields: [
-                            { name: "👤 中文姓名", value: name, inline: true },
-                            { name: "📞 電話號碼", value: phone, inline: true },
-                            { name: "🪪 身份證號碼", value: `\`${hkid}\``, inline: false },
-                            { name: "🚗 預約考試項目", value: `${exam} (${gear})`, inline: true },
-                            { name: "⏱️ 首選上課時段", value: time, inline: true }
-                        ],
-                        timestamp: new Date().toISOString()
-                    }]
-                };
-
-                await fetch(DISCORD_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(discordMessage)
-                });
-
-                // 5. 提示學員成功
-                alert(`感謝預約，${name}！\n預約資料已成功登記，我們將會盡快聯絡你。`);
-                document.getElementById('appointmentForm').reset();
-
-            } catch (err) {
-                console.error('Error Details:', err);
-                alert('系統發生錯誤：' + (err.message || JSON.stringify(err)));
+            // 模擬測試效果：
+            if(checkName === "陳大文" && checkHkid.includes("A123456")) {
+                resultDiv.style.display = "block";
+                resultDiv.style.backgroundColor = "#d4edda";
+                resultDiv.style.color = "#155724";
+                resultDiv.style.border = "1px solid #c3e6cb";
+                // 這裡的結果反映出：後台手動輸入的「可駕駛車輛類別」以及「有效狀態」
+                resultDiv.innerHTML = `🟢 驗證成功<br>持牌人：${checkName}<br>駕駛執照狀態：【 有效 (VALID) 】<br>已登記可駕駛類別：輕型貨車、私家車`;
+            } else {
+                resultDiv.style.display = "block";
+                resultDiv.style.backgroundColor = "#f8d7da";
+                resultDiv.style.color = "#721c24";
+                resultDiv.style.border = "1px solid #f5c6cb";
+                resultDiv.innerHTML = `🔴 查無此人 或 執照已失效<br>請確保輸入之姓名與身份證號碼完全正確。`;
             }
         }
     </script>
