@@ -106,7 +106,7 @@
         /* 特色區塊 */
         .features {
             padding: 5px 5% 40px 5%;
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
         }
         .section-title {
@@ -125,7 +125,7 @@
         }
         .feature-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
         }
         .feature-card {
@@ -142,7 +142,7 @@
             color: #000;
         }
 
-        /* 表格區塊樣式 */
+        /* 預約表格區塊 */
         .booking-section {
             background-color: #fffdec;
             border-top: 1px solid #ebdca5;
@@ -224,15 +224,15 @@
         <ul class="nav-links">
             <li><a href="#">首頁</a></li>
             <li><a href="#booking">網上預約</a></li>
-            <li><a href="#police-check">執法查核</a></li>
+            <li><a href="#">執法查核</a></li>
             <li><a href="#" class="btn-admin">職員後台</a></li>
         </ul>
     </nav>
 
     <header class="hero">
         <h1>路政圓緣，穩健啟航</h1>
-        <p>提供專業駕駛培訓，高合格率，口碑載道。</p>
-        <a href="#booking" class="btn-scroll">立即網上預約考試</a>
+        <p>提供專業輕型貨車及私家車駕駛培訓，高合格率，口碑載道。</p>
+        <a href="#booking" class="btn-scroll">立即預約學車</a>
     </header>
 
     <section class="features">
@@ -241,7 +241,12 @@
             <div class="feature-card">
                 <div style="font-size: 24pt;">🚗</div>
                 <h3>新型教學車輛</h3>
-                <p>全車隊配備新型輕型貨車，保養極佳，學得放心。</p>
+                <p>全車隊配備新型輕型貨車及私家車，保養極佳，學得放心。</p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 24pt;">⏱️</div>
+                <h3>彈性上課時間</h3>
+                <p>配合上班族及學生時間，平日、週末、日夜均可靈活約車。</p>
             </div>
             <div class="feature-card">
                 <div style="font-size: 24pt;">📊</div>
@@ -252,17 +257,12 @@
     </section>
 
     <section class="booking-section" id="booking">
-        <h2 class="section-title">網上預約考試</h2>
+        <h2 class="section-title">學車網上預約</h2>
         <div class="form-container">
             <form id="appointmentForm" onsubmit="handleBooking(event)">
                 <div class="form-group">
                     <label for="name">中文姓名 *</label>
                     <input type="text" id="name" required placeholder="例如：陳大文">
-                </div>
-
-                <div class="form-group">
-                    <label for="hkid">身份證號碼 *</label>
-                    <input type="text" id="hkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$" title="請輸入正確的香港身份證格式">
                 </div>
                 
                 <div class="form-group">
@@ -271,9 +271,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label>預約考試項目 *</label>
+                    <label>欲報讀課程 *</label>
                     <div class="radio-group">
-                        <label><input type="radio" name="exam_type" value="輕型貨車" checked> 輕型貨車（包含私家車牌照）</label>
+                        <label><input type="radio" name="vehicle_type" value="輕型貨車" checked> 輕型貨車</label>
+                        <label><input type="radio" name="vehicle_type" value="私家車"> 私家車</label>
                     </div>
                 </div>
 
@@ -281,6 +282,7 @@
                     <label>傳動系統 *</label>
                     <div class="radio-group">
                         <label><input type="radio" name="gear_type" value="自動波" checked> 自動波</label>
+                        <label><input type="radio" name="gear_type" value="棍波"> 棍波</label>
                     </div>
                 </div>
 
@@ -298,63 +300,27 @@
         </div>
     </section>
 
-    <section class="booking-section" id="police-check" style="background-color: #f7f5e6; border-top: none;">
-        <h2 class="section-title">執法及相關部門 - 駕駛執照有效性核對</h2>
-        <div class="form-container" style="border-color: #333;">
-            <p style="font-size: 10pt; color: #666; margin-top: 0; text-align: center;">經授權之執法人員請輸入持牌人精確資料進行即時核對。</p>
-            <form id="licenseCheckForm" onsubmit="handleLicenseCheck(event)">
-                <div class="form-group">
-                    <label for="check_name">持牌人姓名 *</label>
-                    <input type="text" id="check_name" required placeholder="例如：陳大文">
-                </div>
-                <div class="form-group">
-                    <label for="check_hkid">持牌人身份證號碼 *</label>
-                    <input type="text" id="check_hkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$">
-                </div>
-                <button type="submit" class="btn-submit" style="background-color: #333; color: #ebdca5;">即時核對執照狀態</button>
-            </form>
-            
-            <div id="checkResult" style="margin-top: 20px; padding: 15px; border-radius: 4px; display: none; text-align: center; font-weight: bold;"></div>
-        </div>
-    </section>
-
     <footer>
         &copy; 2026 港緣駕駛學院 Kong Yuen Driving School. 版權所有。<br>
         此系統僅供學術與學院管理用途。
     </footer>
 
     <script>
-        // 處理預約表單提交
         function handleBooking(event) {
-            event.preventDefault();
+            event.preventDefault(); // 阻止表格刷新頁面
+            
+            // 擷取表單數據
             const name = document.getElementById('name').value;
-            const examType = document.querySelector('input[name="exam_type"]:checked').value;
-            alert(`感謝預約，${name}！\n我們已收到你的【${examType}】預約考試申請。`);
+            const phone = document.getElementById('phone').value;
+            const vehicle = document.querySelector('input[name="vehicle_type"]:checked').value;
+            const gear = document.querySelector('input[name="gear_type"]:checked').value;
+            const time = document.getElementById('preferred_time').value;
+
+            // 提示使用者（未來這裡會串接後端儲存資料並通知 Discord）
+            alert(`感謝預約，${name}！\n我們已收到你的【${vehicle} (${gear})】預約申請，將會盡快聯絡你。`);
+            
+            // 重設表單
             document.getElementById('appointmentForm').reset();
-        }
-
-        // 處理執照有效性核對（模擬後台直接設定的資料，包含「可駕駛車輛類別」）
-        function handleLicenseCheck(event) {
-            event.preventDefault();
-            const checkName = document.getElementById('check_name').value;
-            const checkHkid = document.getElementById('check_hkid').value.toUpperCase();
-            const resultDiv = document.getElementById('checkResult');
-
-            // 模擬測試效果：
-            if(checkName === "陳大文" && checkHkid.includes("A123456")) {
-                resultDiv.style.display = "block";
-                resultDiv.style.backgroundColor = "#d4edda";
-                resultDiv.style.color = "#155724";
-                resultDiv.style.border = "1px solid #c3e6cb";
-                // 這裡的結果反映出：後台手動輸入的「可駕駛車輛類別」以及「有效狀態」
-                resultDiv.innerHTML = `🟢 驗證成功<br>持牌人：${checkName}<br>駕駛執照狀態：【 有效 (VALID) 】<br>已登記可駕駛類別：輕型貨車、私家車`;
-            } else {
-                resultDiv.style.display = "block";
-                resultDiv.style.backgroundColor = "#f8d7da";
-                resultDiv.style.color = "#721c24";
-                resultDiv.style.border = "1px solid #f5c6cb";
-                resultDiv.innerHTML = `🔴 查無此人 或 執照已失效<br>請確保輸入之姓名與身份證號碼完全正確。`;
-            }
         }
     </script>
 </body>
