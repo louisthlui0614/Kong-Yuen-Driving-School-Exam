@@ -2,145 +2,68 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <title>職員後台 - 港緣駕駛學院</title>
+    <title>管理後台 - 港緣駕駛學院</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 引入 FullCalendar -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .admin-container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1, h2 { color: #333; border-bottom: 2px solid #e6c229; padding-bottom: 10px; }
+        body { font-family: 'Noto Sans HK', sans-serif; background: #f4f7f6; margin: 0; }
+        header { padding: 20px 80px; background: #eef6ff; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: white; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background: #fffdec; }
-        .section { margin-bottom: 40px; }
-        .btn { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; }
-        .btn-add { background: #e6c229; color: black; }
-        .btn-del { background: #ff4444; color: white; margin-left: 5px; }
-        .btn-edit { background: #4CAF50; color: white; }
-        input, select { padding: 8px; margin: 5px 0; }
+        th { background: #003366; color: white; }
+        #calendar { margin-top: 50px; background: white; padding: 20px; border-radius: 10px; }
+        footer { padding: 40px; background: #003366; color: white; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="admin-container">
-    <h1>職員後台管理系統</h1>
+    <header>
+        <div class="logo-container"><strong>港緣駕駛學院後台</strong></div>
+    </header>
 
-    <div class="section">
-        <h2>選項設定</h2>
-        <div style="display: flex; gap: 20px;">
-            <div style="flex: 1;">
-                <h3>考試種類</h3>
-                <input type="text" id="newExam" placeholder="新考試名稱">
-                <button class="btn btn-add" onclick="addItem('exam_options', 'newExam')">新增</button>
-                <ul id="examList"></ul>
-            </div>
-            <div style="flex: 1;">
-                <h3>時間段</h3>
-                <input type="text" id="newSlot" placeholder="例如: 16:00 - 17:00">
-                <button class="btn btn-add" onclick="addItem('time_slots', 'newSlot')">新增</button>
-                <ul id="slotList"></ul>
-            </div>
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>所有預約記錄</h2>
-        <table id="bookingTable">
+    <div class="container">
+        <h2>駕駛人士記錄</h2>
+        <table id="driverTable">
             <thead>
-                <tr>
-                    <th>學員</th>
-                    <th>身份證</th>
-                    <th>考試項目</th>
-                    <th>日期</th>
-                    <th>時間</th>
-                    <th>電話</th>
-                </tr>
+                <tr><th>姓名</th><th>身份證</th><th>電話</th><th>牌照</th><th>狀態</th><th>PDF</th></tr>
             </thead>
             <tbody></tbody>
         </table>
+
+        <div id='calendar'></div>
     </div>
 
-    <div class="section">
-        <h2>學員數據庫</h2>
-        <table id="studentTable">
-            <thead>
-                <tr>
-                    <th>身份證號碼</th>
-                    <th>姓名</th>
-                    <th>牌照類別</th>
-                    <th>狀態</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-</div>
+    <footer><p>&copy; 2026 港緣駕駛學院 Admin Panel.</p></footer>
 
-<script>
-    const SUPABASE_URL = '你的_SUPABASE_URL';
-    const SUPABASE_KEY = '你的_SUPABASE_ANON_KEY';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <script>
+        const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
 
-    async function loadAll() {
-        // 載入預約
-        const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
-        const bBody = document.querySelector('#bookingTable tbody');
-        bBody.innerHTML = bookings.map(b => `<tr><td>${b.student_name}</td><td>${b.id_card}</td><td>${b.exam_type}</td><td>${b.exam_date}</td><td>${b.time_slot}</td><td>${b.phone}</td></tr>`).join('');
+        // 1. 載入駕駛人士記錄
+        async function loadDrivers() {
+            const { data } = await supabase.from('driver_records').select('*');
+            const tbody = document.querySelector('#driverTable tbody');
+            data.forEach(d => {
+                tbody.innerHTML += `<tr><td>${d.name}</td><td>${d.hkid}</td><td>${d.phone}</td><td>${d.license_type}</td><td>${d.status}</td><td><a href="${d.pdf_url}">檢視</a></td></tr>`;
+            });
+        }
 
-        // 載入學員
-        const { data: students } = await supabase.from('students').select('*');
-        const sBody = document.querySelector('#studentTable tbody');
-        sBody.innerHTML = students.map(s => `
-            <tr>
-                <td>${s.id_card}</td>
-                <td><input id="name-${s.id_card}" value="${s.name}"></td>
-                <td><input id="class-${s.id_card}" value="${s.license_class || ''}"></td>
-                <td>
-                    <select id="status-${s.id_card}">
-                        <option value="true" ${s.is_active ? 'selected' : ''}>有效</option>
-                        <option value="false" ${!s.is_active ? 'selected' : ''}>無效</option>
-                    </select>
-                </td>
-                <td><button class="btn btn-edit" onclick="updateStudent('${s.id_card}')">儲存</button></td>
-            </tr>
-        `).join('');
-
-        // 載入清單
-        loadSimpleList('exam_options', 'examList');
-        loadSimpleList('time_slots', 'slotList');
-    }
-
-    async function loadSimpleList(table, elementId) {
-        const { data } = await supabase.from(table).select('*');
-        document.getElementById(elementId).innerHTML = data.map(i => `
-            <li>${i.label} <button class="btn-del" onclick="deleteItem('${table}', '${i.id}')">刪除</button></li>
-        `).join('');
-    }
-
-    async function addItem(table, inputId) {
-        const val = document.getElementById(inputId).value;
-        if (!val) return;
-        await supabase.from(table).insert([{ label: val }]);
-        document.getElementById(inputId).value = '';
-        loadAll();
-    }
-
-    async function deleteItem(table, id) {
-        await supabase.from(table).delete().eq('id', id);
-        loadAll();
-    }
-
-    async function updateStudent(id_card) {
-        const name = document.getElementById(`name-${id_card}`).value;
-        const lic = document.getElementById(`class-${id_card}`).value;
-        const status = document.getElementById(`status-${id_card}`).value === 'true';
-        await supabase.from('students').update({ name, license_class: lic, is_active: status }).eq('id_card', id_card);
-        alert('學員資料已更新');
-        loadAll();
-    }
-
-    loadAll();
-</script>
-
+        // 2. 載入預約記錄並顯示於月曆
+        document.addEventListener('DOMContentLoaded', async function() {
+            const { data: bookings } = await supabase.from('bookings').select('*');
+            const calendarEl = document.getElementById('calendar');
+            
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: bookings.map(b => ({
+                    title: b.name + ' - ' + b.license_type,
+                    start: b.date
+                }))
+            });
+            calendar.render();
+            loadDrivers();
+        });
+    </script>
 </body>
 </html>
