@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院</title>
+    <title>港緣駕駛學院 </title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
@@ -45,16 +45,8 @@
         }
         .btn-scroll:hover { background-color: #d4b220; transform: translateY(-2px); }
 
-        /* 特色區塊 */
-        .features { padding: 5px 5% 40px 5%; max-width: 900px; margin: 0 auto; }
-        .section-title { text-align: center; font-size: 20pt; margin: 40px 0; position: relative; }
-        .section-title::after { content: ''; display: block; width: 50px; height: 3px; background-color: #e6c229; margin: 8px auto 0 auto; }
-        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; }
-        .feature-card { background-color: #fff; border: 1px solid #ebdca5; padding: 25px; border-radius: 6px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .feature-card h3 { margin: 10px 0; font-size: 14pt; color: #000; }
-
         /* 表格區塊 */
-        .booking-section { background-color: #fffdec; border-top: 1px solid #ebdca5; border-bottom: 1px solid #ebdca5; padding: 5px 5% 50px 5%; }
+        .booking-section { background-color: #fffdec; border-top: 1px solid #ebdca5; padding: 50px 5%; }
         .form-container { max-width: 600px; margin: 0 auto; background-color: #fff; border: 2px solid #e6c229; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 10pt; }
@@ -72,7 +64,7 @@
 
     <nav class="navbar">
         <div class="nav-logo">
-            <img src="logo.png" alt="港緣 Logo">
+            <div style="font-size: 24px; margin-right: 5px;">🚗</div>
             港緣駕駛學院
         </div>
         <ul class="nav-links">
@@ -89,24 +81,8 @@
         <a href="#booking" class="btn-scroll">立即網上預約考試</a>
     </header>
 
-    <section class="features">
-        <h2 class="section-title">為什麼選擇港緣？</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div style="font-size: 24pt;">🚗</div>
-                <h3>新型教學車輛</h3>
-                <p>全車隊配備新型輕型貨車，保養極佳，學得放心。</p>
-            </div>
-            <div class="feature-card">
-                <div style="font-size: 24pt;">📊</div>
-                <h3>系統化高效率</h3>
-                <p>首創智能學員校務管理系統，進度一目了然，隨時查看考試表格。</p>
-            </div>
-        </div>
-    </section>
-
     <section class="booking-section" id="booking">
-        <h2 class="section-title">網上預約考試</h2>
+        <h2 style="text-align: center; margin-bottom: 30px;">網上預約考試</h2>
         <div class="form-container">
             <form id="appointmentForm" onsubmit="handleBooking(event)">
                 <div class="form-group">
@@ -151,24 +127,24 @@
     </footer>
 
     <script>
-        // 1. 初始化 Supabase
+        // 1. 初始化 Supabase 聯動
         const SUPABASE_URL = "https://falyohlekezdbxjnhwcn.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_1CL8M8zn7UDANbvNM0KxNQ_DSNRq1QB";
         const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Discord Webhook 網址
+        // Discord Webhook 聯動
         const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1506184682893738076/FyeR1FBXdwJnol8EEnkg7OSFzrrg2YKvZkbPNHesgp3B0DoAOmg9IN7juSNyt6CMRAUW";
 
-        // 2. 處理表單提交
+        // 2. 核心提交邏輯
         async function handleBooking(event) {
-            event.preventDefault();
+            event.preventDefault(); // 阻止網頁跳轉刷新
             
-            // 停用按鈕，畫面馬上切換「提交中」
+            // 立即改變按鈕狀態（證明 JS 成功運作）
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.innerText = "提交中...";
 
-            // 擷取欄位值
+            // 讀取前端數據
             const name = document.getElementById('name').value.trim();
             const hkid = document.getElementById('hkid').value.trim().toUpperCase();
             const phone = document.getElementById('phone').value.trim();
@@ -179,9 +155,9 @@
             const fullExamString = `${exam_type} (${gear_type})`;
 
             let supabaseSuccess = false;
-            let supabaseErrorMsg = "";
+            let supabaseErrorMsg = "未知錯誤";
 
-            // 動作 A：寫入 Supabase 資料庫
+            // 【第一步】寫入資料庫 (用 try-catch 隔離，就算爆咗都唔會卡死 Discord)
             try {
                 const { data, error } = await supabase
                     .from('appointments')
@@ -196,23 +172,24 @@
                     ]);
 
                 if (error) {
-                    console.error("Supabase Error Details:", error);
-                    supabaseErrorMsg = `${error.code} - ${error.message}`;
+                    console.error("Supabase Error:", error);
+                    supabaseErrorMsg = `[SQL錯誤] ${error.code}: ${error.message}`;
                 } else {
                     supabaseSuccess = true;
                 }
             } catch (dbErr) {
-                console.error("Database Connection Crash:", dbErr);
-                supabaseErrorMsg = dbErr.message;
+                console.error("Database Connection Exception:", dbErr);
+                supabaseErrorMsg = `[連線崩潰] ${dbErr.message}`;
             }
 
-            // 動作 B：發送 Discord Webhook 通知（與資料庫解耦，確保一定會嘗試執行）
+            // 【第二步】不論資料庫成敗，強制衝刺發送 Discord Webhook
             try {
-                const statusTitle = supabaseSuccess ? "🔔 收到全新網上預約考試申請！" : "⚠️ [警告] 收到網上預約，但寫入資料庫失敗！";
+                const statusTitle = supabaseSuccess ? "🔔 收到全新網上預約考試申請！" : "⚠️ [系統警告] 有新預約，但寫入資料庫失敗！";
+                
                 const discordMessage = {
                     embeds: [{
                         title: statusTitle,
-                        color: supabaseSuccess ? 15122985 : 16711680, 
+                        color: supabaseSuccess ? 15122985 : 16711680, // 成功=黃色，失敗=紅色
                         fields: [
                             { name: "👤 申請人姓名", value: name, inline: true },
                             { name: "📞 電話號碼", value: phone, inline: true },
@@ -220,14 +197,15 @@
                             { name: "🚗 報考項目", value: fullExamString, inline: true },
                             { name: "⏰ 首選時段", value: preferred_time, inline: true }
                         ],
-                        footer: { text: `港緣校務自動化系統 • DB狀態: ${supabaseSuccess ? '成功' : '失敗'}` },
+                        footer: { text: `港緣自動化系統 • 數據庫同步狀態: ${supabaseSuccess ? 'SUCCESS' : 'FAILED'}` },
                         timestamp: new Date().toISOString()
                     }]
                 };
 
+                // 如果 Supabase 失敗，將背後的原因直接附在 Discord 裡面，方便職員立即知道
                 if (!supabaseSuccess) {
                     discordMessage.embeds[0].fields.push({
-                        name: "❌ 資料庫錯誤回報",
+                        name: "❌ 數據庫回報之錯誤原因",
                         value: `\`\`\`${supabaseErrorMsg}\`\`\``,
                         inline: false
                     });
@@ -243,15 +221,16 @@
                 console.error("Discord Webhook Send Failed:", discordErr);
             }
 
-            // 3. 給使用者的前端回饋
+            // 【第三步】彈出前端提示通知用戶
             if (supabaseSuccess) {
                 alert(`感謝你，${name}！\n預約申請已成功提交，資料已寫入系統，職員頻道亦已收到通知。`);
                 document.getElementById('appointmentForm').reset();
             } else {
-                alert(`⚠️ 系統提示：資料已嘗試送出，但資料庫同步失敗。\n\n錯誤原因：${supabaseErrorMsg}\n\n* 職員渠道會手動處理您的申請。`);
+                // 將資料庫拒絕的原因直接以 Alert 彈出
+                alert(`⚠️ 系統提示：資料已嘗試送出，但資料庫同步失敗。\n\n錯誤原因：\n${supabaseErrorMsg}\n\n* 職員渠道已收到此失敗報告並會手動處理您的預約。`);
             }
 
-            // 恢復按鈕
+            // 恢復按鈕狀態
             submitBtn.disabled = false;
             submitBtn.innerText = "提交預約申請";
         }
