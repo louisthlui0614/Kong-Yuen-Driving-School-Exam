@@ -64,11 +64,11 @@
     <form id="checkForm" onsubmit="performInspection(event)">
         <div class="form-group">
             <label for="searchName">學員中文姓名 *</label>
-            <input type="text" id="searchName" required placeholder="例如：陳大文">
+            <input type="text" id="searchName"  placeholder="例如：陳大文">
         </div>
         <div class="form-group">
             <label for="searchHkid">香港身份證號碼 *</label>
-            <input type="text" id="searchHkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$" title="請輸入正確的香港身份證格式">
+            <input type="text" id="searchHkid"  placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$" title="請輸入正確的香港身份證格式">
         </div>
         <button type="submit" class="btn-search">🔍 提交身份與學籍核對</button>
     </form>
@@ -110,14 +110,28 @@
         const name = document.getElementById('searchName').value.trim();
         const hkid = document.getElementById('searchHkid').value.toUpperCase().trim();
 
+        // 安全防護：如果兩個欄位都是空的，不執行查詢
+        if (!name && !hkid) {
+            alert('請至少輸入「學員中文姓名」或「香港身份證號碼」其中一項進行查核！');
+            return;
+        }
+
         try {
-            // 1. 去 Supabase 進行精確配對查詢 (必須同時吻合姓名、香港身份證，且狀態必須是 active)
-            const { data, error } = await supabaseClient
-                .from('students')
-                .select('*')
-                .eq('name_zh', name)
-                .eq('hkid', hkid)
-                .eq('status', 'active'); // 只有被職員審批過轉為 active 的人才查得到
+            // 1. 動態建立 Supabase 查詢條件
+            let query = supabaseClient.from('students').select('*').eq('status', 'active');
+
+            if (name && hkid) {
+                // 如果兩個都有填，使用 OR 邏輯：名字對了 OR 身份證對了
+                query = query.or(`name_zh.eq."${name}",hkid.eq."${hkid}"`);
+            } else if (name) {
+                // 只填了名字
+                query = query.eq('name_zh', name);
+            } else if (hkid) {
+                // 只填了身份證
+                query = query.eq('hkid', hkid);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
@@ -126,7 +140,7 @@
             // 2. 渲染前端畫面
             if (data && data.length > 0) {
                 isFound = true;
-                const student = data[0];
+                const student = data[0]; // 如果有多筆，預設顯示第一筆符合的資料
                 document.getElementById('resId').innerText = student.hkid;
                 document.getElementById('resName').innerText = student.name_zh;
                 document.getElementById('resExam').innerText = student.exam_type;
@@ -149,11 +163,11 @@
                 avatar_url: "https://images-ext-1.discordapp.net/external/vR9cRnt3F7yH6K3FWhn8wYgC7z_kQeN8Wpmsr0K3I-Q/%3Fsize%3D1024/https/cdn.discordapp.com/icons/1211111111111111111/a_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png",
                 embeds: [{
                     title: isFound ? "ℹ️ 執法查核：【成功查獲學籍】" : "⚠️ 執法查核警報：【查無此人】",
-                    color: isFound ? 3066993 : 15158332, // 成功綠色，失敗紅色
-                    description: `系統於剛才錄得一次執法查核請求。`,
+                    color: isFound ? 3066993 : 15158332,
+                    description: `系統於剛才錄得一次執法查核請求（二選一條件查詢）。`,
                     fields: [
-                        { name: "🔎 查詢姓名", value: name, inline: true },
-                        { name: "🪪 查詢身份證", value: `\`${hkid}\``, inline: true },
+                        { name: "🔎 輸入姓名條件", value: name ? name : "（未填寫）", inline: true },
+                        { name: "🪪 輸入身份證條件", value: hkid ? `\`${hkid}\`` : "（未填寫）", inline: true },
                         { name: "📊 系統結果", value: isFound ? "✅ 正式學員 (Active)" : "❌ 查無此有效學籍紀錄", inline: false }
                     ],
                     timestamp: new Date().toISOString()
