@@ -3,18 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>港緣駕駛學院1</title>
+    <title>港緣駕駛學院</title>
     <style>
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { box-sizing: border-box; }
         body {
             font-family: "Microsoft JhengHei", "Apple LiGothic Medium", sans-serif;
             color: #1a1a1a;
             background-color: #fdfaf2;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
+            margin: 0; padding: 0; line-height: 1.6;
         }
         
         /* 導航欄 */
@@ -22,196 +18,52 @@
             background-color: #fffdec;
             border-bottom: 3px solid #e6c229;
             padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16pt;
-            font-weight: bold;
-            color: #000;
-        }
-        .nav-logo img {
-            height: 45px;
-            width: auto;
-        }
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        .nav-links a {
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            font-size: 11pt;
-            transition: color 0.2s;
-        }
-        .nav-links a:hover {
-            color: #e6c229;
-        }
-        .btn-admin {
-            background-color: #333;
-            color: #ebdca5 !important;
-            padding: 6px 12px;
-            border-radius: 4px;
-        }
-        .btn-admin:hover {
-            background-color: #e6c229;
-            color: #000 !important;
-        }
+        .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 16pt; font-weight: bold; color: #000; }
+        .nav-logo img { height: 45px; width: auto; }
+        .nav-links { display: flex; gap: 20px; list-style: none; margin: 0; padding: 0; }
+        .nav-links a { text-decoration: none; color: #333; font-weight: bold; font-size: 11pt; transition: color 0.2s; }
+        .nav-links a:hover { color: #e6c229; }
+        .btn-admin { background-color: #333; color: #ebdca5 !important; padding: 6px 12px; border-radius: 4px; }
+        .btn-admin:hover { background-color: #e6c229; color: #000 !important; }
 
         /* Hero 橫幅 */
         .hero {
             background: linear-gradient(135deg, #ebdca5 0%, #fdfaf2 100%);
-            padding: 80px 5%;
-            text-align: center;
-            border-bottom: 1px solid #ebdca5;
+            padding: 80px 5%; text-align: center; border-bottom: 1px solid #ebdca5;
         }
-        .hero h1 {
-            font-size: 28pt;
-            margin: 0 0 15px 0;
-            color: #1a1a1a;
-        }
-        .hero p {
-            font-size: 14pt;
-            color: #555;
-            margin: 0 0 30px 0;
-        }
+        .hero h1 { font-size: 28pt; margin: 0 0 15px 0; color: #1a1a1a; }
+        .hero p { font-size: 14pt; color: #555; margin: 0 0 30px 0; }
         .btn-scroll {
-            background-color: #e6c229;
-            color: #000;
-            padding: 12px 30px;
-            font-size: 12pt;
-            font-weight: bold;
-            text-decoration: none;
-            border-radius: 5px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: background 0.2s, transform 0.2s;
+            background-color: #e6c229; color: #000; padding: 12px 30px; font-size: 12pt;
+            font-weight: bold; text-decoration: none; border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: background 0.2s, transform 0.2s;
         }
-        .btn-scroll:hover {
-            background-color: #d4b220;
-            transform: translateY(-2px);
-        }
+        .btn-scroll:hover { background-color: #d4b220; transform: translateY(-2px); }
 
         /* 特色區塊 */
-        .features {
-            padding: 5px 5% 40px 5%;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .section-title {
-            text-align: center;
-            font-size: 20pt;
-            margin: 40px 0;
-            position: relative;
-        }
-        .section-title::after {
-            content: '';
-            display: block;
-            width: 50px;
-            height: 3px;
-            background-color: #e6c229;
-            margin: 8px auto 0 auto;
-        }
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-        }
-        .feature-card {
-            background-color: #fff;
-            border: 1px solid #ebdca5;
-            padding: 25px;
-            border-radius: 6px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        .feature-card h3 {
-            margin: 10px 0;
-            font-size: 14pt;
-            color: #000;
-        }
+        .features { padding: 5px 5% 40px 5%; max-width: 900px; margin: 0 auto; }
+        .section-title { text-align: center; font-size: 20pt; margin: 40px 0; position: relative; }
+        .section-title::after { content: ''; display: block; width: 50px; height: 3px; background-color: #e6c229; margin: 8px auto 0 auto; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; }
+        .feature-card { background-color: #fff; border: 1px solid #ebdca5; padding: 25px; border-radius: 6px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .feature-card h3 { margin: 10px 0; font-size: 14pt; color: #000; }
 
-        /* 表格區塊樣式 */
-        .booking-section {
-            background-color: #fffdec;
-            border-top: 1px solid #ebdca5;
-            border-bottom: 1px solid #ebdca5;
-            padding: 5px 5% 50px 5%;
-        }
-        .form-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #fff;
-            border: 2px solid #e6c229;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 6px;
-            font-size: 10pt;
-        }
-        .form-group input[type="text"],
-        .form-group input[type="tel"],
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 10pt;
-            font-family: inherit;
-        }
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #e6c229;
-            background-color: #fffdec;
-        }
-        .radio-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 5px;
-        }
-        .btn-submit {
-            width: 100%;
-            background-color: #e6c229;
-            color: #000;
-            border: none;
-            padding: 12px;
-            font-size: 12pt;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-submit:hover {
-            background-color: #d4b220;
-        }
+        /* 表格區塊 */
+        .booking-section { background-color: #fffdec; border-top: 1px solid #ebdca5; border-bottom: 1px solid #ebdca5; padding: 5px 5% 50px 5%; }
+        .form-container { max-width: 600px; margin: 0 auto; background-color: #fff; border: 2px solid #e6c229; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 10pt; }
+        .form-group input[type="text"], .form-group input[type="tel"], .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 10pt; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #e6c229; background-color: #fffdec; }
+        .radio-group { display: flex; gap: 15px; margin-top: 5px; }
+        .btn-submit { width: 100%; background-color: #e6c229; color: #000; border: none; padding: 12px; font-size: 12pt; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+        .btn-submit:hover { background-color: #d4b220; }
 
-        /* 頁腳 */
-        footer {
-            text-align: center;
-            padding: 30px 5%;
-            font-size: 9pt;
-            color: #666;
-            background-color: #fdfaf2;
-        }
+        footer { text-align: center; padding: 30px 5%; font-size: 9pt; color: #666; background-color: #fdfaf2; }
     </style>
 </head>
 <body>
@@ -222,9 +74,9 @@
             港緣駕駛學院
         </div>
         <ul class="nav-links">
-            <li><a href="#">首頁</a></li>
+            <li><a href="index.html">首頁</a></li>
             <li><a href="#booking">網上預約</a></li>
-            <li><a href="#police-check">執法查核</a></li>
+            <li><a href="check.html">執法查核</a></li>
             <li><a href="#" class="btn-admin">職員後台</a></li>
         </ul>
     </nav>
@@ -259,31 +111,26 @@
                     <label for="name">中文姓名 *</label>
                     <input type="text" id="name" required placeholder="例如：陳大文">
                 </div>
-
                 <div class="form-group">
                     <label for="hkid">身份證號碼 *</label>
                     <input type="text" id="hkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$" title="請輸入正確的香港身份證格式">
                 </div>
-                
                 <div class="form-group">
                     <label for="phone">電話號碼 *</label>
                     <input type="tel" id="phone" required placeholder="例如：91234567" pattern="[0-9]{8}">
                 </div>
-
                 <div class="form-group">
                     <label>預約考試項目 *</label>
                     <div class="radio-group">
                         <label><input type="radio" name="exam_type" value="輕型貨車" checked> 輕型貨車（包含私家車牌照）</label>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>傳動系統 *</label>
                     <div class="radio-group">
                         <label><input type="radio" name="gear_type" value="自動波" checked> 自動波</label>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="preferred_time">首選上課時段</label>
                     <select id="preferred_time">
@@ -292,69 +139,21 @@
                         <option value="週末及公眾假期">週末及公眾假期</option>
                     </select>
                 </div>
-
                 <button type="submit" class="btn-submit">提交預約申請</button>
             </form>
         </div>
     </section>
 
-    <section class="booking-section" id="police-check" style="background-color: #f7f5e6; border-top: none;">
-        <h2 class="section-title">執法及相關部門 - 駕駛執照有效性核對</h2>
-        <div class="form-container" style="border-color: #333;">
-            <p style="font-size: 10pt; color: #666; margin-top: 0; text-align: center;">經授權之執法人員請輸入持牌人精確資料進行即時核對。</p>
-            <form id="licenseCheckForm" onsubmit="handleLicenseCheck(event)">
-                <div class="form-group">
-                    <label for="check_name">持牌人姓名 *</label>
-                    <input type="text" id="check_name" required placeholder="例如：陳大文">
-                </div>
-                <div class="form-group">
-                    <label for="check_hkid">持牌人身份證號碼 *</label>
-                    <input type="text" id="check_hkid" required placeholder="例如：A123456(7)" pattern="^[A-Z]{1,2}[0-9]{6}\(?[0-9A]\)?$">
-                </div>
-                <button type="submit" class="btn-submit" style="background-color: #333; color: #ebdca5;">即時核對執照狀態</button>
-            </form>
-            
-            <div id="checkResult" style="margin-top: 20px; padding: 15px; border-radius: 4px; display: none; text-align: center; font-weight: bold;"></div>
-        </div>
-    </section>
-
     <footer>
-        &copy; 2026 港緣駕駛學院 Kong Yuen Driving School. 版權所有。<br>
-        此系統僅供學術與學院管理用途。
+        &copy; 2026 港緣駕駛學院 Kong Yuen Driving School. 版權所有。
     </footer>
 
     <script>
-        // 處理預約表單提交
         function handleBooking(event) {
             event.preventDefault();
             const name = document.getElementById('name').value;
-            const examType = document.querySelector('input[name="exam_type"]:checked').value;
-            alert(`感謝預約，${name}！\n我們已收到你的【${examType}】預約考試申請。`);
+            alert(`感謝預約，${name}！\n我們已收到你的預約考試申請。`);
             document.getElementById('appointmentForm').reset();
-        }
-
-        // 處理執照有效性核對（模擬後台直接設定的資料，包含「可駕駛車輛類別」）
-        function handleLicenseCheck(event) {
-            event.preventDefault();
-            const checkName = document.getElementById('check_name').value;
-            const checkHkid = document.getElementById('check_hkid').value.toUpperCase();
-            const resultDiv = document.getElementById('checkResult');
-
-            // 模擬測試效果：
-            if(checkName === "陳大文" && checkHkid.includes("A123456")) {
-                resultDiv.style.display = "block";
-                resultDiv.style.backgroundColor = "#d4edda";
-                resultDiv.style.color = "#155724";
-                resultDiv.style.border = "1px solid #c3e6cb";
-                // 這裡的結果反映出：後台手動輸入的「可駕駛車輛類別」以及「有效狀態」
-                resultDiv.innerHTML = `🟢 驗證成功<br>持牌人：${checkName}<br>駕駛執照狀態：【 有效 (VALID) 】<br>已登記可駕駛類別：輕型貨車、私家車`;
-            } else {
-                resultDiv.style.display = "block";
-                resultDiv.style.backgroundColor = "#f8d7da";
-                resultDiv.style.color = "#721c24";
-                resultDiv.style.border = "1px solid #f5c6cb";
-                resultDiv.innerHTML = `🔴 查無此人 或 執照已失效<br>請確保輸入之姓名與身份證號碼完全正確。`;
-            }
         }
     </script>
 </body>
