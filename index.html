@@ -9,54 +9,59 @@
 
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         
-        /* Header - 調整背景色為極淡藍色 */
+        /* Header - 手機版調整 */
         header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 20px 80px; 
-            background: #eef6ff; /* 極淡的藍色背景 */
-            border-bottom: 2px solid #dbeafe; 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px 5%; background: #eef6ff; border-bottom: 2px solid #dbeafe; 
         }
 
-        /* Logo 連結效果 */
-        .logo-link { display: flex; align-items: center; gap: 15px; text-decoration: none; color: #003366; }
-        .logo-container { display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 1.5rem; }
-        .logo-container img { height: 50px; transition: transform 0.2s; }
-        .logo-link:hover img { transform: scale(1.05); } /* 滑鼠移上 logo 時的提示 */
-
-        .topbar a { margin-left: 30px; text-decoration: none; color: #555; font-weight: 600; transition: color 0.3s; }
-        .topbar a:hover { color: #ff6600; }
+        .logo-container img { height: 40px; }
+        .topbar a { margin-left: 15px; text-decoration: none; color: #555; font-weight: 600; }
         
-        /* Intro */
-        .intro { padding: 80px 20px; text-align: center; background: white; }
-        .intro h1 { color: #003366; font-size: 2.5rem; margin-bottom: 20px; }
-        .intro img { max-width: 700px; width: 100%; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); margin: 30px 0; }
+        /* Intro - 圖片全螢幕關鍵 */
+        .intro { padding: 50px 5%; text-align: center; background: white; }
+        .intro h1 { color: #003366; font-size: 2rem; }
         
-        /* Features */
-        .features { display: flex; justify-content: space-around; padding: 60px 80px; background: #f4f7f6; }
-        .feature-item { text-align: center; max-width: 300px; }
+        /* 圖片放大至全螢幕關鍵：移除 max-width，寬度設為 100% */
+        .intro img { 
+            width: 100%; 
+            height: auto; 
+            display: block; 
+            margin: 30px 0; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15); 
+        }
+        
+        /* Features - 響應式排版 (手機變直排) */
+        .features { 
+            display: flex; flex-wrap: wrap; justify-content: center; 
+            padding: 40px 5%; gap: 20px; background: #f4f7f6; 
+        }
+        .feature-item { text-align: center; flex: 1 1 250px; }
         .feature-item h3 { color: #003366; }
 
-        /* Button */
-        .btn-reserve { display: inline-block; padding: 18px 40px; background: #ff6600; color: white; text-decoration: none; border-radius: 50px; font-weight: bold; transition: transform 0.2s, background 0.3s; }
-        .btn-reserve:hover { background: #e65c00; transform: scale(1.05); }
+        .btn-reserve { 
+            display: inline-block; padding: 15px 30px; background: #ff6600; color: white; 
+            text-decoration: none; border-radius: 50px; font-weight: bold; 
+        }
 
-        /* Footer */
         footer { padding: 40px; background: #003366; color: white; text-align: center; font-size: 0.9rem; }
+        
+        /* 電腦版寬螢幕修正 */
+        @media (min-width: 1024px) {
+            header { padding: 20px 80px; }
+            .intro img { border-radius: 0; } /* 如果想要真正的無邊框全寬 */
+            .features { padding: 60px 80px; }
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <!-- 將 logo 和文字包在一個連結內 -->
         <a href="index.html" class="logo-link">
             <div class="logo-container">
                 <img src="logo.png" alt="Logo">
-               
             </div>
         </a>
-        
         <nav class="topbar">
             <a href="index.html">首頁</a>
             <a href="booking.html">網上預約</a>
@@ -66,9 +71,10 @@
     <section class="intro">
         <h1>專業駕駛 啟航未來</h1>
         <p>港緣駕駛學院致力於提供專業、安全的駕駛培訓服務。<br>擁有資深教練團隊及現代化教學設施，助您順利考取駕駛執照。</p>
+        
         <img src="background.png" alt="學院簡介圖片">
-        <br>
-        <a href="#" class="btn-reserve">立即預約考試</a>
+        
+        <a href="booking.html" class="btn-reserve">立即預約考試</a>
     </section>
 
     <section class="features">
