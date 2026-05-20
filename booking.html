@@ -110,18 +110,21 @@
             btn.disabled = true;
             btn.innerText = "提交中...";
 
-            // 使用 select 檢查是否存在，如果不存在則 insert，避免 upsert 在無 unique index 時報錯
-            const { data: existing } = await supabaseClient.from('driver_records').select('id').eq('hkid', formData.id_card).single();
+            // 使用 maybeSingle 避免 406 錯誤
+            const { data: existing } = await supabaseClient
+                .from('driver_records')
+                .select('id')
+                .eq('hkid', formData.id_card)
+                .maybeSingle();
 
             if (!existing) {
-                const { error: upsertErr } = await supabaseClient.from('driver_records').insert([{
+                await supabaseClient.from('driver_records').insert([{
                     name: formData.name,
                     hkid: formData.id_card,
                     phone: formData.phone,
                     license_type: formData.license_type,
                     status: '無效'
                 }]);
-                if (upsertErr) console.error("駕駛者新增失敗:", upsertErr);
             }
 
             const { error } = await supabaseClient.from('bookings').insert([formData]);
