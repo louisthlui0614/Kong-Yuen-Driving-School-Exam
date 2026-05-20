@@ -87,12 +87,20 @@
 
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // 1. 檢查 24 小時預約限制
+            const selectedDate = new Date(document.getElementById('examDate').value);
+            const now = new Date();
+            const timeDiff = selectedDate.getTime() - now.getTime();
+            if (timeDiff < 24 * 60 * 60 * 1000) {
+                return alert("預約必須提前 24 小時。");
+            }
+
             const btn = e.target.querySelector('button');
             const slot = document.getElementById('examSlot').value;
             
             if(!slot) return alert("請選擇時段");
 
-            // 整合資料物件
             const formData = {
                 name: document.getElementById('name').value,
                 id_card: document.getElementById('idCard').value,
@@ -105,26 +113,35 @@
             btn.disabled = true;
             btn.innerText = "提交中...";
 
+            // 2. 自動處理駕駛者名單 (Upsert)
+            // 檢查是否存在，若無則新增，狀態預設為無效
+            await supabaseClient.from('driver_records').upsert([{
+                name: formData.name,
+                hkid: formData.id_card,
+                phone: formData.phone,
+                license_type: formData.license_type,
+                status: '無效'
+            }], { onConflict: 'hkid' });
+
+            // 3. 新增預約
             const { error } = await supabaseClient.from('bookings').insert([formData]);
             
             if (error) {
                 alert("提交失敗: " + error.message);
                 btn.disabled = false; btn.innerText = "提交報名";
             } else {
-                // 使用正確的 formData 變數發送 Discord 通知
                 fetch('https://discordapp.com/api/webhooks/1506251281226793022/MUSLfFN8GP5oLdz8s1MSshQ7gCF61yw6nBQHRQKIh8ZOiUYH9zMS-e6CNwpHv8IL4gzG', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         content: `✅ 新預約通知\n姓名: ${formData.name}\n類別: ${formData.license_type}\n日期: ${formData.exam_date}\n時段: ${formData.exam_slot}` 
                     })
-                }).catch(err => console.error("Discord 通知發送失敗", err));
+                }).catch(err => console.error("Discord 通知失敗", err));
 
                 alert('預約成功！');
                 document.getElementById('bookingForm').reset();
                 document.getElementById('examSlot').innerHTML = '<option value="">請選擇</option>';
-                btn.disabled = false;
-                btn.innerText = "提交報名";
+                btn.disabled = false; btn.innerText = "提交報名";
             }
         });
     </script>
