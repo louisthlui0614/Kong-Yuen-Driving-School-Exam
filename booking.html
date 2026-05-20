@@ -88,7 +88,6 @@
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // 1. 檢查 24 小時限制
             const selectedDate = new Date(document.getElementById('examDate').value);
             const now = new Date();
             if ((selectedDate.getTime() - now.getTime()) < 24 * 60 * 60 * 1000) {
@@ -96,41 +95,36 @@
             }
 
             const btn = e.target.querySelector('button');
-            const hkidVal = document.getElementById('idCard').value;
             const slot = document.getElementById('examSlot').value;
-            
             if(!slot) return alert("請選擇時段");
 
-            btn.disabled = true;
-            btn.innerText = "提交中...";
-
-            // 2. 先查詢駕駛者是否存在
-            const { data: existingDriver } = await supabaseClient
-                .from('driver_records')
-                .select('id')
-                .eq('hkid', hkidVal)
-                .single();
-
-            // 3. 若不存在，則新增駕駛者記錄
-            if (!existingDriver) {
-                await supabaseClient.from('driver_records').insert([{
-                    name: document.getElementById('name').value,
-                    hkid: hkidVal,
-                    phone: document.getElementById('phone').value,
-                    license_type: document.getElementById('licenseType').value,
-                    status: '無效'
-                }]);
-            }
-
-            // 4. 新增預約
-            const { error } = await supabaseClient.from('bookings').insert([{
+            const formData = {
                 name: document.getElementById('name').value,
-                id_card: hkidVal,
+                id_card: document.getElementById('idCard').value,
                 phone: document.getElementById('phone').value,
                 license_type: document.getElementById('licenseType').value,
                 exam_date: document.getElementById('examDate').value,
                 exam_slot: slot
-            }]);
+            };
+
+            btn.disabled = true;
+            btn.innerText = "提交中...";
+
+            // 使用 select 檢查是否存在，如果不存在則 insert，避免 upsert 在無 unique index 時報錯
+            const { data: existing } = await supabaseClient.from('driver_records').select('id').eq('hkid', formData.id_card).single();
+
+            if (!existing) {
+                const { error: upsertErr } = await supabaseClient.from('driver_records').insert([{
+                    name: formData.name,
+                    hkid: formData.id_card,
+                    phone: formData.phone,
+                    license_type: formData.license_type,
+                    status: '無效'
+                }]);
+                if (upsertErr) console.error("駕駛者新增失敗:", upsertErr);
+            }
+
+            const { error } = await supabaseClient.from('bookings').insert([formData]);
             
             if (error) {
                 alert("提交失敗: " + error.message);
@@ -140,7 +134,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        content: `✅ 新預約通知\n姓名: ${document.getElementById('name').value}\n類別: ${document.getElementById('licenseType').value}\n日期: ${document.getElementById('examDate').value}` 
+                        content: `✅ 新預約通知\n姓名: ${formData.name}\n類別: ${formData.license_type}\n日期: ${formData.exam_date}\n時段: ${formData.exam_slot}` 
                     })
                 }).catch(err => console.error("Discord 通知失敗", err));
 
