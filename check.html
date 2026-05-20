@@ -2,29 +2,21 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <title>執法部門搜尋 - 港緣駕駛學院</title>
+    <title>網上預約 - 港緣駕駛學院</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script>
-    const SUPABASE_URL = 'https://egevptrvdatxpwxpwxhi.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    
-    // 請在此處填入你的 Discord Webhook Link
-    const DISCORD_WEBHOOK_URL = 'https://discordapp.com/api/webhooks/1506288384111284366/8k-Cel4iTV2UqpPEexCWe_zigDmLSkpnZdE-Qq9ALpQk931Izh589FHOp4a5IDn12y2s';
-    </script>
-
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700&display=swap');
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; background-color: #f4f7f6; }
-        header { padding: 20px 80px; background: #eef6ff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .logo-link { text-decoration: none; color: #003366; font-weight: 700; font-size: 1.5rem; }
-        .container { max-width: 800px; margin: 30px auto; padding: 30px; background: white; border-radius: 10px; }
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { padding: 10px; flex-grow: 1; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 10px 20px; background: #003366; color: white; border: none; cursor: pointer; border-radius: 5px; }
-        footer { padding: 40px; background: #003366; color: white; text-align: center; margin-top: 50px; }
-        #auth-screen { text-align: center; padding: 50px; }
-        #search-screen { display: none; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 80px; background: #eef6ff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo-link { display: flex; align-items: center; gap: 15px; text-decoration: none; color: #003366; font-weight: 700; font-size: 1.5rem; }
+        .topbar a { margin-left: 30px; text-decoration: none; color: #555; font-weight: 600; }
+        
+        .form-container { max-width: 600px; margin: 50px auto; padding: 30px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #ff6600; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        
+        footer { padding: 40px; background: #003366; color: white; text-align: center; }
     </style>
 </head>
 <body>
@@ -32,85 +24,126 @@
     <header>
         <a href="index.html" class="logo-link">港緣駕駛學院</a>
         <nav class="topbar">
-            <a href="check.html">首頁</a>
+            <a href="index.html">首頁</a>
+            <a href="booking.html">網上預約</a>
         </nav>
     </header>
 
-    <div id="auth-screen" class="container">
-        <h2>執法部門登入</h2>
-        <input type="text" id="p_user" placeholder="帳號">
-        <input type="password" id="p_pass" placeholder="密碼">
-        <button onclick="loginPolice()">登入</button>
-    </div>
-
-    <div id="search-screen" class="container">
-        <h2>駕駛人士搜尋</h2>
-        <div class="search-box">
-            <input type="text" id="query" placeholder="輸入姓名或身份證號碼...">
-            <button onclick="searchDriver()">搜尋</button>
-        </div>
-        <div id="result"></div>
+    <div class="form-container">
+        <h2>立即預約考試</h2>
+        <form id="bookingForm">
+            <input type="text" id="name" placeholder="中文姓名" required>
+            <input type="text" id="idCard" placeholder="身份證編號" required>
+            <input type="tel" id="phone" placeholder="電話號碼" required>
+            
+            <label>考核牌照類別：</label>
+            <select id="licenseType" required><option value="">請選擇</option></select>
+            
+            <label>考試日期：</label>
+            <input type="date" id="examDate" required>
+            
+            <label>考試時段：</label>
+            <select id="examSlot" required><option value="">請先選擇日期</option></select>
+            
+            <button type="submit">提交報名</button>
+        </form>
     </div>
 
     <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
 
     <script>
-        async function loginPolice() {
-            const user = document.getElementById('p_user').value;
-            const pass = document.getElementById('p_pass').value;
-            const { data } = await supabaseClient.from('police_accounts').select('*').eq('username', user).eq('password', pass).single();
-            if (data) {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('search-screen').style.display = 'block';
-            } else { alert("認證失敗或帳號錯誤"); }
+        const supabaseClient = supabase.createClient(
+            'https://egevptrvdatxpwxpwxhi.supabase.co', 
+            'sb_publishable_Ps1KBwIxcfKBrwQkIUcvhA_DWEQbomo'
+        );
+
+        async function loadLicenseTypes() {
+            const { data } = await supabaseClient.from('license_types').select('name');
+            const sel = document.getElementById('licenseType');
+            data?.forEach(t => sel.innerHTML += `<option value="${t.name}">${t.name}</option>`);
         }
 
-        async function searchDriver() {
-            const q = document.getElementById('query').value;
-            const { data, error } = await supabaseClient.from('driver_records').select('*').or(`name.ilike.%${q}%,hkid.ilike.%${q}%`);
+        async function checkAvailability() {
+            const date = document.getElementById('examDate').value;
+            const slotSelect = document.getElementById('examSlot');
+            if (!date) return;
+
+            const { data: allSlots } = await supabaseClient.from('time_slots').select('time_range');
+            const { data: booked } = await supabaseClient.from('bookings').select('exam_slot').eq('exam_date', date);
             
-            const res = document.getElementById('result');
-            if (error) { console.error(error); alert("搜尋錯誤"); return; }
-            
-            res.innerHTML = data && data.length ? '' : '找不到記錄';
-            data?.forEach(d => {
-                res.innerHTML += `
-                    <div style="border:1px solid #ddd; padding:15px; margin-top:10px;" id="record_${d.id}">
-                        <p>姓名: <span id="name_${d.id}">${d.name}</span> | 身份證: ${d.hkid}</p>
-                        <p>目前狀態: ${d.status}</p>
-                        <select id="s_${d.id}"><option value="有效" ${d.status=='有效'?'selected':''}>有效</option><option value="無效" ${d.status=='無效'?'selected':''}>無效</option></select>
-                        <button onclick="updateStatus('${d.id}')">更新狀態</button>
-                    </div>`;
+            const bookedList = booked?.map(b => b.exam_slot) || [];
+
+            slotSelect.innerHTML = '<option value="">請選擇</option>';
+            allSlots?.forEach(s => {
+                const isBooked = bookedList.includes(s.time_range);
+                slotSelect.innerHTML += `<option value="${s.time_range}" ${isBooked ? 'disabled style="color:red"' : ''}>
+                    ${s.time_range} ${isBooked ? '(已滿)' : ''}
+                </option>`;
             });
         }
 
-        async function updateStatus(id) {
-            const status = document.getElementById('s_'+id).value;
-            const name = document.getElementById('name_'+id).innerText;
+        document.getElementById('examDate').addEventListener('change', checkAvailability);
+        loadLicenseTypes();
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            const { error } = await supabaseClient.from('driver_records').update({ status: status }).eq('id', id);
+            // 1. 檢查 24 小時預約限制
+            const selectedDate = new Date(document.getElementById('examDate').value);
+            const now = new Date();
+            const timeDiff = selectedDate.getTime() - now.getTime();
+            if (timeDiff < 24 * 60 * 60 * 1000) {
+                return alert("預約必須提前 24 小時。");
+            }
+
+            const btn = e.target.querySelector('button');
+            const slot = document.getElementById('examSlot').value;
+            
+            if(!slot) return alert("請選擇時段");
+
+            const formData = {
+                name: document.getElementById('name').value,
+                id_card: document.getElementById('idCard').value,
+                phone: document.getElementById('phone').value,
+                license_type: document.getElementById('licenseType').value,
+                exam_date: document.getElementById('examDate').value,
+                exam_slot: slot
+            };
+
+            btn.disabled = true;
+            btn.innerText = "提交中...";
+
+            // 2. 自動處理駕駛者名單 (Upsert)
+            // 檢查是否存在，若無則新增，狀態預設為無效
+            await supabaseClient.from('driver_records').upsert([{
+                name: formData.name,
+                hkid: formData.id_card,
+                phone: formData.phone,
+                license_type: formData.license_type,
+                status: '無效'
+            }], { onConflict: 'hkid' });
+
+            // 3. 新增預約
+            const { error } = await supabaseClient.from('bookings').insert([formData]);
             
             if (error) {
-                alert("更新失敗: " + error.message);
+                alert("提交失敗: " + error.message);
+                btn.disabled = false; btn.innerText = "提交報名";
             } else {
-                alert("狀態已成功更新！");
-                // 發送 Discord 通知
-                sendDiscordNotification(name, status);
-                searchDriver();
-            }
-        }
+                fetch('https://discordapp.com/api/webhooks/1506251281226793022/MUSLfFN8GP5oLdz8s1MSshQ7gCF61yw6nBQHRQKIh8ZOiUYH9zMS-e6CNwpHv8IL4gzG', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        content: `✅ 新預約通知\n姓名: ${formData.name}\n類別: ${formData.license_type}\n日期: ${formData.exam_date}\n時段: ${formData.exam_slot}` 
+                    })
+                }).catch(err => console.error("Discord 通知失敗", err));
 
-        async function sendDiscordNotification(name, status) {
-            const payload = {
-                content: `🚨 **駕駛記錄更新通知**\n姓名: ${name}\n新狀態: **${status}**\n更新時間: ${new Date().toLocaleString()}`
-            };
-            
-            await fetch(DISCORD_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-        }
+                alert('預約成功！');
+                document.getElementById('bookingForm').reset();
+                document.getElementById('examSlot').innerHTML = '<option value="">請選擇</option>';
+                btn.disabled = false; btn.innerText = "提交報名";
+            }
+        });
     </script>
 </body>
 </html>
