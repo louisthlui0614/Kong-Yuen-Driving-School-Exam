@@ -18,10 +18,10 @@
         .logo-link { text-decoration: none; color: #003366; display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 1.5rem; }
         .topbar a { margin-left: 30px; text-decoration: none; color: #555; font-weight: 600; }
         .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: white; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 40px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background: #003366; color: white; }
-        #calendar { margin-top: 50px; background: white; padding: 20px; border-radius: 10px; }
+        #calendar { margin-top: 30px; background: white; padding: 20px; border-radius: 10px; }
         #admin-content { display: none; }
         .login-box { text-align: center; padding: 100px; }
         input { padding: 8px; margin: 5px; }
@@ -51,12 +51,18 @@
     <div id="admin-content" class="container">
         <h2>駕駛人士記錄</h2>
         <table id="driverTable">
-            <thead>
-                <tr><th>姓名</th><th>身份證</th><th>電話</th><th>牌照</th><th>狀態</th><th>操作</th></tr>
-            </thead>
+            <thead><tr><th>姓名</th><th>身份證</th><th>電話</th><th>牌照</th><th>狀態</th><th>操作</th></tr></thead>
             <tbody></tbody>
         </table>
+
+        <h2>考試預約月曆</h2>
         <div id='calendar'></div>
+
+        <h2>預約記錄明細 (日期排序)</h2>
+        <table id="bookingListTable">
+            <thead><tr><th>日期</th><th>時段</th><th>姓名</th><th>身份證</th><th>牌照類別</th></tr></thead>
+            <tbody></tbody>
+        </table>
     </div>
 
     <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
@@ -74,9 +80,8 @@
         }
 
         async function loadData() {
-            // 載入駕駛記錄
-            const { data: drivers, error: dErr } = await supabaseClient.from('driver_records').select('*');
-            if (dErr) console.error(dErr);
+            // 1. 載入駕駛記錄
+            const { data: drivers } = await supabaseClient.from('driver_records').select('*');
             const tbody = document.querySelector('#driverTable tbody');
             tbody.innerHTML = '';
             drivers?.forEach(d => {
@@ -90,15 +95,31 @@
                 </tr>`;
             });
 
-            // 載入預約記錄 (修正欄位名稱：id_card, exam_date)
-            const { data: bookings, error: bErr } = await supabaseClient.from('bookings').select('*');
-            if (bErr) console.error(bErr);
-            
+            // 2. 載入預約記錄並排序
+            const { data: bookings } = await supabaseClient.from('bookings').select('*');
+            const sortedBookings = bookings?.sort((a, b) => 
+                (a.exam_date + a.exam_slot).localeCompare(b.exam_date + b.exam_slot)
+            );
+
+            // 更新預約清單表格
+            const bookTbody = document.querySelector('#bookingListTable tbody');
+            bookTbody.innerHTML = '';
+            sortedBookings?.forEach(b => {
+                bookTbody.innerHTML += `<tr><td>${b.exam_date}</td><td>${b.exam_slot}</td><td>${b.name}</td><td>${b.id_card}</td><td>${b.license_type}</td></tr>`;
+            });
+
+            // 更新月曆
             const calendarEl = document.getElementById('calendar');
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
-                // 使用修正後的 name 和 exam_date
-                events: bookings?.map(b => ({ title: b.name, start: b.exam_date })) 
+                events: sortedBookings?.map(b => ({ 
+                    title: `${b.name} (${b.exam_slot})`, 
+                    start: b.exam_date,
+                    extendedProps: { hkid: b.id_card, type: b.license_type }
+                })),
+                eventClick: function(info) {
+                    alert(`預約詳情:\n姓名: ${info.event.title}\n身份證: ${info.event.extendedProps.hkid}\n類別: ${info.event.extendedProps.type}`);
+                }
             });
             calendar.render();
         }
