@@ -88,11 +88,7 @@
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const selectedDate = new Date(document.getElementById('examDate').value);
-            const now = new Date();
-            if ((selectedDate.getTime() - now.getTime()) < 24 * 60 * 60 * 1000) {
-                return alert("預約必須提前 24 小時。");
-            }
+            // ❌ 已成功移除「預約必須提前 24 小時」的時間判斷與限制邏輯
 
             const btn = e.target.querySelector('button');
             const slot = document.getElementById('examSlot').value;
