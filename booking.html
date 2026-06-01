@@ -63,22 +63,17 @@
             data?.forEach(t => sel.innerHTML += `<option value="${t.name}">${t.name}</option>`);
         }
 
+        // 🟢 經已移除原本加載時的「額滿變紅/禁用」功能，只單純列出所有可選時段
         async function checkAvailability() {
             const date = document.getElementById('examDate').value;
             const slotSelect = document.getElementById('examSlot');
             if (!date) return;
 
             const { data: allSlots } = await supabaseClient.from('time_slots').select('time_range');
-            const { data: booked } = await supabaseClient.from('bookings').select('exam_slot').eq('exam_date', date);
-            
-            const bookedList = booked?.map(b => b.exam_slot) || [];
 
             slotSelect.innerHTML = '<option value="">請選擇</option>';
             allSlots?.forEach(s => {
-                const isBooked = bookedList.includes(s.time_range);
-                slotSelect.innerHTML += `<option value="${s.time_range}" ${isBooked ? 'disabled style="color:red"' : ''}>
-                    ${s.time_range} ${isBooked ? '(已滿)' : ''}
-                </option>`;
+                slotSelect.innerHTML += `<option value="${s.time_range}">${s.time_range}</option>`;
             });
         }
 
@@ -88,58 +83,94 @@
         document.getElementById('bookingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // ❌ 已成功移除「預約必須提前 24 小時」的時間判斷與限制邏輯
-
             const btn = e.target.querySelector('button');
             const slot = document.getElementById('examSlot').value;
             if(!slot) return alert("請選擇時段");
 
             const formData = {
-                name: document.getElementById('name').value,
-                id_card: document.getElementById('idCard').value,
-                phone: document.getElementById('phone').value,
+                name: document.getElementById('name').value.trim(),
+                id_card: document.getElementById('idCard').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
                 license_type: document.getElementById('licenseType').value,
                 exam_date: document.getElementById('examDate').value,
                 exam_slot: slot
             };
 
+            // 鎖定按鈕避免連擊
             btn.disabled = true;
             btn.innerText = "提交中...";
 
-            // 使用 maybeSingle 避免 406 錯誤
-            const { data: existing } = await supabaseClient
-                .from('driver_records')
-                .select('id')
-                .eq('hkid', formData.id_card)
-                .maybeSingle();
+            try {
+                // 1️⃣ 限制一：防止每日同一名字多次預約
+                const { data: nameCheck, error: nameError } = await supabaseClient
+                    .from('bookings')
+                    .select('id')
+                    .eq('exam_date', formData.exam_date)
+                    .eq('name', formData.name)
+                    .maybeSingle();
 
-            if (!existing) {
-                await supabaseClient.from('driver_records').insert([{
-                    name: formData.name,
-                    hkid: formData.id_card,
-                    phone: formData.phone,
-                    license_type: formData.license_type,
-                    status: '無效'
-                }]);
-            }
+                if (nameCheck) {
+                    alert(`提示：姓名「${formData.name}」在 ${formData.exam_date} 當天已經有預約紀錄，請勿重複預約。`);
+                    btn.disabled = false; btn.innerText = "提交報名";
+                    return;
+                }
 
-            const { error } = await supabaseClient.from('bookings').insert([formData]);
-            
-            if (error) {
-                alert("提交失敗: " + error.message);
-                btn.disabled = false; btn.innerText = "提交報名";
-            } else {
-                fetch('https://discordapp.com/api/webhooks/1506251281226793022/MUSLfFN8GP5oLdz8s1MSshQ7gCF61yw6nBQHRQKIh8ZOiUYH9zMS-e6CNwpHv8IL4gzG', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        content: `✅ 新預約通知\n姓名: ${formData.name}\n類別: ${formData.license_type}\n日期: ${formData.exam_date}\n時段: ${formData.exam_slot}` 
-                    })
-                }).catch(err => console.error("Discord 通知失敗", err));
+                // 2️⃣ 限制二：提交時進行即時日期時間比對，確保同時輸入預約時不會重複同一個時段
+                const { data: slotCheck, error: slotError } = await supabaseClient
+                    .from('bookings')
+                    .select('id')
+                    .eq('exam_date', formData.exam_date)
+                    .eq('exam_slot', formData.exam_slot)
+                    .maybeSingle();
 
-                alert('預約成功！');
-                document.getElementById('bookingForm').reset();
-                document.getElementById('examSlot').innerHTML = '<option value="">請選擇</option>';
+                if (slotCheck) {
+                    alert(`對不起！該時段 (${formData.exam_date} ${formData.exam_slot}) 剛剛已被其他學員搶先預約，請選擇其他時段。`);
+                    btn.disabled = false; btn.innerText = "提交報名";
+                    return;
+                }
+
+                // 3️⃣ 檢查或建立司機檔案紀錄 (driver_records)
+                const { data: existing } = await supabaseClient
+                    .from('driver_records')
+                    .select('id')
+                    .eq('hkid', formData.id_card)
+                    .maybeSingle();
+
+                if (!existing) {
+                    await supabaseClient.from('driver_records').insert([{
+                        name: formData.name,
+                        hkid: formData.id_card,
+                        phone: formData.phone,
+                        license_type: formData.license_type,
+                        status: '無效'
+                    }]);
+                }
+
+                // 4️⃣ 正式寫入預約
+                const { error } = await supabaseClient.from('bookings').insert([formData]);
+                
+                if (error) {
+                    alert("提交失敗: " + error.message);
+                    btn.disabled = false; btn.innerText = "提交報名";
+                } else {
+                    // 發送 Discord 渠道通知
+                    fetch('https://discordapp.com/api/webhooks/1506251281226793022/MUSLfFN8GP5oLdz8s1MSshQ7gCF61yw6nBQHRQKIh8ZOiUYH9zMS-e6CNwpHv8IL4gzG', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            content: `✅ 新預約通知\n姓名: ${formData.name}\n類別: ${formData.license_type}\n日期: ${formData.exam_date}\n時段: ${formData.exam_slot}` 
+                        })
+                    }).catch(err => console.error("Discord 通知失敗", err));
+
+                    alert('預約成功！');
+                    document.getElementById('bookingForm').reset();
+                    document.getElementById('examSlot').innerHTML = '<option value="">請選擇</option>';
+                    btn.disabled = false; btn.innerText = "提交報名";
+                }
+
+            } catch (err) {
+                console.error("系統執行錯誤:", err);
+                alert("系統繁忙，請稍後再試。");
                 btn.disabled = false; btn.innerText = "提交報名";
             }
         });
