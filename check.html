@@ -68,11 +68,20 @@
         }
 
         async function searchDriver() {
-            const q = document.getElementById('query').value;
-            const { data, error } = await supabaseClient.from('driver_records').select('*').or(`name.ilike.%${q}%,hkid.ilike.%${q}%`);
+            const rawQuery = document.getElementById('query').value.trim();
+            if (!rawQuery) return alert("請輸入搜尋內容");
+
+            // 🟢 安全處理：將括號 ( ) 替換為 SQL 通配符 %，避免破壞 Supabase .or() 的語法結構
+            const cleanQuery = rawQuery.replace(/[\(\)]/g, '%');
+
+            // 執行資料庫模糊搜尋
+            const { data, error } = await supabaseClient
+                .from('driver_records')
+                .select('*')
+                .or(`name.ilike.%${cleanQuery}%,hkid.ilike.%${cleanQuery}%`);
             
             const res = document.getElementById('result');
-            if (error) { console.error(error); return; }
+            if (error) { console.error("搜尋發生錯誤:", error); return; }
             
             res.innerHTML = data && data.length ? '' : '找不到記錄';
             data?.forEach(d => {
