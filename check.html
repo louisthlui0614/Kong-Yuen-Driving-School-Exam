@@ -12,7 +12,7 @@
     
     const DISCORD_WEBHOOK_URL = 'https://discordapp.com/api/webhooks/1506288384111284366/8k-Cel4iTV2UqpPEexCWe_zigDmLSkpnZdE-Qq9ALpQk931Izh589FHOp4a5IDn12y2s';
     
-    let currentPoliceUser = ""; // 用於儲存登入的帳號
+    let currentPoliceUser = ""; 
     </script>
 
     <style>
@@ -23,10 +23,10 @@
         .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
         input { padding: 10px; flex-grow: 1; border: 1px solid #ccc; border-radius: 5px; }
         button { padding: 10px 20px; background: #003366; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        .score-input { width: 80px; padding: 5px; }
         footer { padding: 40px; background: #003366; color: white; text-align: center; margin-top: 50px; }
         #auth-screen { text-align: center; padding: 50px; }
         #search-screen { display: none; }
-        .score-input { width: 80px; padding: 5px; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -71,8 +71,8 @@
         async function searchDriver() {
             const rawQuery = document.getElementById('query').value.trim();
             if (!rawQuery) return alert("請輸入搜尋內容");
-
             const cleanQuery = rawQuery.replace(/[\(\)]/g, '%');
+
             const { data, error } = await supabaseClient
                 .from('driver_records')
                 .select('*')
@@ -89,41 +89,40 @@
                         <p><strong>姓名:</strong> ${d.name} | <strong>身份證:</strong> ${d.hkid}</p>
                         <p><strong>擁有牌照:</strong> ${d.license_type || '無'}</p>
                         <p><strong>目前狀態:</strong> ${d.status}</p>
-                        <p><strong>分數:</strong> 
-                            <input type="number" id="score_${d.id}" value="${d.score || 0}" class="score-input">
-                            <button onclick="updateDriver('${d.id}', '${d.name}')">更新資料</button>
-                        </p>
-                        ${isInvalid ? '' : `<button onclick="setInvalid('${d.id}', '${d.name}')" style="background:#cc0000;">強制設為無效</button>`}
+                        <p><strong>分數:</strong> <input type="number" id="score_${d.id}" value="${d.score || 0}" class="score-input">
+                        <button onclick="updateData('${d.id}', '${d.name}', 'score')">更新分數</button></p>
+                        ${isInvalid ? '' : `<button onclick="updateData('${d.id}', '${d.name}', 'status')">更改為無效</button>`}
                     </div>`;
             });
         }
 
-        async function updateDriver(id, name) {
-            const newScore = document.getElementById(`score_${id}`).value;
-            const { error } = await supabaseClient
-                .from('driver_records')
-                .update({ score: parseInt(newScore) })
-                .eq('id', id);
+        async function updateData(id, name, type) {
+            let updatePayload = {};
+            let displayStatus = "";
+
+            if (type === 'score') {
+                const newScore = document.getElementById('score_' + id).value;
+                updatePayload = { score: newScore };
+                displayStatus = "分數更新為 " + newScore;
+            } else {
+                updatePayload = { status: '無效' };
+                displayStatus = "狀態更新為 無效";
+            }
+            
+            const { error } = await supabaseClient.from('driver_records').update(updatePayload).eq('id', id);
             
             if (!error) {
-                alert("分數更新成功");
-                sendDiscordNotification(name, `分數更改為 ${newScore}`, currentPoliceUser);
-            } else {
-                alert("更新失敗: " + error.message);
-            }
-        }
-
-        async function setInvalid(id, name) {
-            const { error } = await supabaseClient.from('driver_records').update({ status: '無效' }).eq('id', id);
-            if (!error) {
-                sendDiscordNotification(name, '無效', currentPoliceUser);
+                sendDiscordNotification(name, displayStatus, currentPoliceUser);
                 searchDriver();
+            } else {
+                console.error("更新失敗", error);
+                alert("更新失敗");
             }
         }
 
         async function sendDiscordNotification(name, action, officer) {
             const payload = {
-                content: `🚨 **駕駛記錄變更**\n修改人: ${officer}\n姓名: ${name}\n變更內容: **${action}**\n時間: ${new Date().toLocaleString()}`
+                content: `🚨 **駕駛記錄變動**\n修改人: ${officer}\n目標: ${name}\n操作: **${action}**\n時間: ${new Date().toLocaleString()}`
             };
             await fetch(DISCORD_WEBHOOK_URL, {
                 method: 'POST',
