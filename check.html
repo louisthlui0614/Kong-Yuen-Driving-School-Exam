@@ -89,7 +89,7 @@
                         <p><strong>姓名:</strong> ${d.name} | <strong>身份證:</strong> ${d.hkid}</p>
                         <p><strong>牌照:</strong> ${d.license_type || '無'}</p>
                         <p><strong>狀態:</strong> ${d.status}</p>
-                        <p><strong>分數:</strong> <input type="number" id="score_${d.id}" value="${d.score || 0}" class="score-input">
+                        <p><strong>分數:</strong> <input type="number" id="score_${d.id}" value="${d.score !== null ? d.score : 0}" class="score-input">
                         <button onclick="updateData('${d.id}', '${d.name}', 'score')">更新分數</button></p>
                         ${isInvalid ? '' : `<button onclick="updateData('${d.id}', '${d.name}', 'status')">更改為無效</button>`}
                     </div>`;
@@ -101,15 +101,20 @@
             let displayStatus = "";
 
             if (type === 'score') {
-                const val = document.getElementById('score_' + id).value;
-                updatePayload = { score: parseInt(val) };
-                displayStatus = "分數更新為 " + val;
+                const val = parseInt(document.getElementById('score_' + id).value);
+                // 邏輯判斷：若分數為 0，則同時將狀態改為無效
+                if (val === 0) {
+                    updatePayload = { score: 0, status: '無效' };
+                    displayStatus = "分數更新為 0，狀態已自動變更為 無效";
+                } else {
+                    updatePayload = { score: val };
+                    displayStatus = "分數更新為 " + val;
+                }
             } else {
                 updatePayload = { status: '無效' };
                 displayStatus = "狀態更新為 無效";
             }
             
-            // 關鍵修正：確保這裡 id 是以字串形式傳入 .eq()
             const { error } = await supabaseClient
                 .from('driver_records')
                 .update(updatePayload)
