@@ -60,7 +60,7 @@
         async function loginPolice() {
             const user = document.getElementById('p_user').value;
             const pass = document.getElementById('p_pass').value;
-            const { data } = await supabaseClient.from('police_accounts').select('*').eq('username', user).eq('password', pass).single();
+            const { data, error } = await supabaseClient.from('police_accounts').select('*').eq('username', user).eq('password', pass).single();
             if (data) {
                 currentPoliceUser = user;
                 document.getElementById('auth-screen').style.display = 'none';
@@ -87,8 +87,8 @@
                 res.innerHTML += `
                     <div style="border:2px solid ${isInvalid ? 'red' : '#ddd'}; padding:15px; margin-top:10px;" id="record_${d.id}">
                         <p><strong>姓名:</strong> ${d.name} | <strong>身份證:</strong> ${d.hkid}</p>
-                        <p><strong>擁有牌照:</strong> ${d.license_type || '無'}</p>
-                        <p><strong>目前狀態:</strong> ${d.status}</p>
+                        <p><strong>牌照:</strong> ${d.license_type || '無'}</p>
+                        <p><strong>狀態:</strong> ${d.status}</p>
                         <p><strong>分數:</strong> <input type="number" id="score_${d.id}" value="${d.score || 0}" class="score-input">
                         <button onclick="updateData('${d.id}', '${d.name}', 'score')">更新分數</button></p>
                         ${isInvalid ? '' : `<button onclick="updateData('${d.id}', '${d.name}', 'status')">更改為無效</button>`}
@@ -101,22 +101,27 @@
             let displayStatus = "";
 
             if (type === 'score') {
-                const newScore = document.getElementById('score_' + id).value;
-                updatePayload = { score: newScore };
-                displayStatus = "分數更新為 " + newScore;
+                const val = document.getElementById('score_' + id).value;
+                updatePayload = { score: parseInt(val) };
+                displayStatus = "分數更新為 " + val;
             } else {
                 updatePayload = { status: '無效' };
                 displayStatus = "狀態更新為 無效";
             }
             
-            const { error } = await supabaseClient.from('driver_records').update(updatePayload).eq('id', id);
+            // 關鍵修正：確保這裡 id 是以字串形式傳入 .eq()
+            const { error } = await supabaseClient
+                .from('driver_records')
+                .update(updatePayload)
+                .eq('id', id);
             
             if (!error) {
                 sendDiscordNotification(name, displayStatus, currentPoliceUser);
+                alert("更新成功");
                 searchDriver();
             } else {
-                console.error("更新失敗", error);
-                alert("更新失敗");
+                console.error("更新詳細錯誤:", error);
+                alert("更新失敗: " + (error.message || "請檢查欄位權限"));
             }
         }
 
@@ -128,7 +133,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            });
+            }).catch(err => console.error("Discord 通知失敗", err));
         }
     </script>
 </body>
