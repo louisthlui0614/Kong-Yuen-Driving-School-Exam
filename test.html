@@ -86,7 +86,7 @@
 
             const name = document.getElementById('username').value;
             const hkid = document.getElementById('hkid').value;
-            const status = score >= 8 ? "合格" : "不合格";
+            const status = score >= 8 ? "合格✅" : "不合格❌";
 
             // 推送 Discord
             await fetch(DISCORD_WEBHOOK, {
