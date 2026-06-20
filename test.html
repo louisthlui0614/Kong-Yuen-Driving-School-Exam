@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>港緣駕駛學院 - 筆試測驗</title>
+    <style>
+        body { font-family: 'Noto Sans HK', sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; user-select: none; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 80px; background: #eef6ff; border-bottom: 2px solid #dbeafe; }
+        .logo-container img { height: 40px; }
+        .topbar a { margin-left: 15px; text-decoration: none; color: #555; font-weight: 600; }
+        
+        .quiz-container { max-width: 800px; margin: 50px auto; padding: 30px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .question { margin-bottom: 20px; padding: 15px; border-bottom: 1px solid #eee; }
+        .btn-submit { display: block; width: 100%; padding: 15px; background: #ff6600; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        
+        footer { padding: 40px; background: #003366; color: white; text-align: center; font-size: 0.9rem; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <header>
+        <a href="index.html" class="logo-link">
+            <div class="logo-container"><img src="logo.png" alt="Logo"></div>
+        </a>
+        <nav class="topbar">
+            <a href="index.html">首頁</a>
+            <a href="booking.html">網上預約</a>
+        </nav>
+    </header>
+
+    <div class="quiz-container" id="quiz-box">
+        <h1>駕駛改進課程筆試</h1>
+        <form id="quiz-form">
+            <label>姓名：<input type="text" id="username" required></label><br><br>
+            <label>身份證號碼：<input type="text" id="hkid" required></label><br><br>
+            <div id="questions-area"></div>
+            <button type="submit" class="btn-submit">提交測驗</button>
+        </form>
+    </div>
+
+    <footer><p>&copy; 2026 港緣駕駛學院. All Rights Reserved.</p></footer>
+
+    <script>
+        const DISCORD_WEBHOOK = 'YOUR_DISCORD_WEBHOOK_URL_HERE';
+
+        const rawQuestions = [
+            { q: "《道路交通條例》是港緣RP-香港法例中那一章？", a: ["第373章", "第374章", "第375章", "第376章"], correct: "第374章" },
+            { q: "《道路交通（交通管制）規例》是港緣RP-香港法例中那一章？", a: ["第374C章", "第374G章", "第375C章", "第375G章"], correct: "第374G章" },
+            { q: "每位市民考取車牌後的預設分數為多少分？", a: ["0", "10", "15", "20"], correct: "15" },
+            { q: "以下那項條例不屬於《道路交通條例》？", a: ["危險駕駛", "不小心駕駛", "違反交通燈號", "駕駛時沒有有效駕駛執照"], correct: "違反交通燈號" },
+            { q: "違反交通燈號的罰款為？", a: ["$1500", "$2000", "$2500", "$3000"], correct: "$3000" },
+            { q: "違例駕駛記分制度，如扣減 10 分須修習駕駛改進課程，此課程的筆試及格分數為多少？", a: ["7題", "8題", "9題", "10題"], correct: "8題" },
+            { q: "危險駕駛引致他人身體受嚴重傷害的罰則是？", a: ["罰款五萬元，監禁20個月。", "罰款三萬元，監禁20個月。", "罰款五萬元，監禁10個月。", "罰款三萬元，監禁10個月。"], correct: "罰款五萬元，監禁20個月。" },
+            { q: "在酒精影響下駕駛汽車的罰則是？", a: ["罰款$20000，監禁10個月。", "監禁$25000，監禁10個月。", "罰款$20000，監禁15個月。", "監禁$25000，監禁15個月。"], correct: "監禁$25000，監禁10個月。" },
+            { q: "以下那項是運輸署指定認可考核機構？", a: ["香港駕駛學院", "海洋駕駛學院", "港緣駕駛學院", "港綠駕駛學院"], correct: "港緣駕駛學院" },
+            { q: "設立駕駛改進課程的宗旨是？", a: ["幫駕駛者加分", "加深駕駛者對自身駕駛態度及行為的了解", "防止駕駛者停牌", "違例駕駛記分制度對沖"], correct: "加深駕駛者對自身駕駛態度及行為的了解" }
+        ];
+
+        // 亂數洗牌函數
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        const area = document.getElementById('questions-area');
+        const shuffledQuestions = shuffle([...rawQuestions]);
+
+        shuffledQuestions.forEach((item, index) => {
+            const shuffledOptions = shuffle([...item.a]);
+            let html = `<div class="question"><p>${index + 1}. ${item.q}</p>`;
+            shuffledOptions.forEach(opt => {
+                html += `<label><input type="radio" name="q${index}" value="${opt}" required> ${opt}</label><br>`;
+            });
+            html += `</div>`;
+            area.innerHTML += html;
+        });
+
+        document.getElementById('quiz-form').onsubmit = async (e) => {
+            e.preventDefault();
+            let score = 0;
+            shuffledQuestions.forEach((item, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`).value;
+                if (selected === item.correct) score++;
+            });
+
+            const name = document.getElementById('username').value;
+            const hkid = document.getElementById('hkid').value;
+            const status = score >= 8 ? "合格" : "不合格";
+
+            // 推送 Discord
+            await fetch(DISCORD_WEBHOOK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: `考生：${name}\n身份證：${hkid}\n答對分數：${score}/10（${status}）`
+                })
+            });
+
+            document.getElementById('quiz-box').innerHTML = "<h2>測驗完成，請聯絡駕駛學院職員</h2>";
+        };
+    </script>
+</body>
+</html>
