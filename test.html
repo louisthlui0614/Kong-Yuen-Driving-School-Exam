@@ -7,6 +7,13 @@
     <style>
         body { font-family: 'Noto Sans HK', sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; user-select: none; }
         
+        /* 截圖保護層 */
+        #screenshot-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 9999; display: none; color: white;
+            justify-content: center; align-items: center; font-size: 2rem;
+        }
+
         header { display: flex; justify-content: space-between; align-items: center; padding: 20px 80px; background: #eef6ff; border-bottom: 2px solid #dbeafe; }
         .logo-container img { height: 40px; }
         .topbar a { margin-left: 15px; text-decoration: none; color: #555; font-weight: 600; }
@@ -19,6 +26,8 @@
     </style>
 </head>
 <body oncontextmenu="return false;">
+
+    <div id="screenshot-overlay">檢測到非法操作，畫面已鎖定</div>
 
     <header>
         <a href="index.html" class="logo-link">
@@ -45,6 +54,24 @@
     <script>
         const DISCORD_WEBHOOK = 'https://discordapp.com/api/webhooks/1506288384111284366/8k-Cel4iTV2UqpPEexCWe_zigDmLSkpnZdE-Qq9ALpQk931Izh589FHOp4a5IDn12y2s';
 
+        // 截圖偵測邏輯：當用戶離開頁面（可能去截圖）時顯示遮罩
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                document.getElementById('screenshot-overlay').style.display = 'flex';
+            } else {
+                document.getElementById('screenshot-overlay').style.display = 'none';
+            }
+        });
+
+        // 防止印螢幕 (PrtSc) - 嘗試清除剪貼簿
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "PrintScreen") {
+                navigator.clipboard.writeText("截圖功能已被禁用");
+                document.getElementById('screenshot-overlay').style.display = 'flex';
+                alert("已禁止截圖操作！");
+            }
+        });
+
         const rawQuestions = [
             { q: "《道路交通條例》是港緣RP-香港法例中那一章？", a: ["第373章", "第374章", "第375章", "第376章"], correct: "第374章" },
             { q: "《道路交通（交通管制）規例》是港緣RP-香港法例中那一章？", a: ["第374C章", "第374G章", "第375C章", "第375G章"], correct: "第374G章" },
@@ -58,10 +85,7 @@
             { q: "設立駕駛改進課程的宗旨是？", a: ["幫駕駛者加分", "加深駕駛者對自身駕駛態度及行為的了解", "防止駕駛者停牌", "違例駕駛記分制度對沖"], correct: "加深駕駛者對自身駕駛態度及行為的了解" }
         ];
 
-        // 亂數洗牌函數
-        function shuffle(array) {
-            return array.sort(() => Math.random() - 0.5);
-        }
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
 
         const area = document.getElementById('questions-area');
         const shuffledQuestions = shuffle([...rawQuestions]);
@@ -86,9 +110,8 @@
 
             const name = document.getElementById('username').value;
             const hkid = document.getElementById('hkid').value;
-            const status = score >= 8 ? "合格✅" : "不合格❌";
+            const status = score >= 8 ? "合格" : "不合格";
 
-            // 推送 Discord
             await fetch(DISCORD_WEBHOOK, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
